@@ -1,0 +1,42 @@
+{
+  "name": "shelflife",
+  "version": "1.0.0",
+  "description": "ShelfLife is a full-stack web application designed to help users reduce food waste and manage groceries more efficiently.",
+  "main": "index.js",
+  "scripts": {
+    "format": "prettier --write '**/*.{html,css,js,json,md}'",
+    "format:check": "prettier --check '**/*.{html,css,js,json,md}'",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "serve": "http-server -c-1 -o",
+    "dev": "reload -b -d .",
+    "start": "node server.js",
+    "start:nodemon": "nodemon server.js",
+    "mongo": "mongosh",
+    "validate": "npm run format:check && npm run lint"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jc-hicks/ShelfLife.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "module",
+  "bugs": {
+    "url": "https://github.com/jc-hicks/ShelfLife/issues"
+  },
+  "homepage": "https://github.com/jc-hicks/ShelfLife#readme",
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "eslint": "^10.5.0",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-prettier": "^5.5.6",
+    "globals": "^17.6.0",
+    "nodemon": "^3.1.14",
+    "prettier": "^3.8.4"
+  },
+  "dependencies": {
+    "mongodb": "^7.3.0"
+  }
+}
