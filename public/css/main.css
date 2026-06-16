@@ -1,6 +1,6 @@
 .my-shelf,
 .shopping-list,
-.prepped-foods, .my-recipes {
+.add-item, .my-recipes {
   background-color: rgb(255, 255, 255);
   border-radius: 12px;
   border-style: solid;
@@ -15,6 +15,6 @@
 }
 
 .shopping-list,
-.prepped-foods, .my-recipes {
+.add-itme, .my-recipes {
   min-height: 250px;
 }

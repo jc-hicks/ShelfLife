@@ -1,0 +1,22 @@
+[
+  {
+    "name": "Milk",
+    "expirationDate": "2026-06-18"
+  },
+  {
+    "name": "Eggs",
+    "expirationDate": "2026-06-25"
+  },
+  {
+    "name": "Ham",
+    "expirationDate": "2026-06-20"
+  },
+  {
+    "name": "Cheddar Cheese",
+    "expirationDate": "2026-07-02"
+  },
+  {
+    "name": "Spinach",
+    "expirationDate": "2026-06-17"
+  }
+]

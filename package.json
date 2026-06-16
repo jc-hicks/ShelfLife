@@ -37,6 +37,10 @@
     "prettier": "^3.8.4"
   },
   "dependencies": {
+    "express": "^5.2.1",
     "mongodb": "^7.3.0"
+  },
+  "directories": {
+    "doc": "docs"
   }
 }

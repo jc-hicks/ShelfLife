@@ -1,0 +1,17 @@
+[
+  {
+    "name": "Chicken Alfredo",
+    "preparedDate": "2026-06-15",
+    "expirationDate": "2026-06-18"
+  },
+  {
+    "name": "Pasta Salad",
+    "preparedDate": "2026-06-14",
+    "expirationDate": "2026-06-17"
+  },
+  {
+    "name": "Turkey Sandwich",
+    "preparedDate": "2026-06-16",
+    "expirationDate": "2026-06-18"
+  }
+]
