@@ -15,6 +15,47 @@
   min-height: 400px;
 }
 
+.shelf-priority-note {
+  font-size: 0.95rem;
+}
+
+.shelf-priority-note code {
+  font-size: 0.85em;
+}
+
+.my-shelf .table tbody tr.shelf-row-urgent {
+  background-color: rgb(255 243 205 / 55%);
+}
+
+.my-shelf .table tbody tr.shelf-row-expired {
+  background-color: rgb(248 215 218 / 70%);
+}
+
+.my-shelf .inline-edit-name,
+.my-shelf .inline-edit-expiration,
+.my-shelf .inline-edit-stored {
+  min-width: 8rem;
+}
+
+.my-shelf .inline-quantity-fields {
+  display: flex;
+  gap: 0.35rem;
+  min-width: 12rem;
+}
+
+.my-shelf .inline-edit-quantity {
+  min-width: 4.5rem;
+  max-width: 5.5rem;
+}
+
+.my-shelf .inline-edit-unit {
+  min-width: 7rem;
+}
+
+.my-shelf .inline-cost-field {
+  min-width: 6.5rem;
+}
+
 .shopping-list,
 .add-item,
 .my-recipes {

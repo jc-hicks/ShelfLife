@@ -40,13 +40,21 @@
           <div class="col-12">
             <div class="my-shelf">
               <h3>My Shelf</h3>
+              <p class="shelf-priority-note text-muted mb-3">
+                Use items at the top first.
+              </p>
 
+              <div class="table-responsive">
               <table class="table">
                 <thead>
                   <tr>
                     <th>#</th>
+                    <th>Priority</th>
                     <th>Food</th>
+                    <th>Quantity</th>
+                    <th>Cost</th>
                     <th>Expiration Date</th>
+                    <th>Stored On</th>
                     <th>Action</th>
                   </tr>
                 </thead>
@@ -55,6 +63,7 @@
                   <tr></tr>
                 </tbody>
               </table>
+              </div>
             </div>
           </div>
         </div>
@@ -118,6 +127,42 @@
                     id="expiration-date-input"
                     name="expirationDate"
                   />
+                </div>
+
+                <div class="mb-3">
+                  <label for="quantity-input" class="form-label">Quantity</label>
+                  <div class="input-group">
+                    <input
+                      type="number"
+                      class="form-control"
+                      id="quantity-input"
+                      name="quantity"
+                      min="0"
+                      step="any"
+                      placeholder="Amount"
+                    />
+                    <select
+                      class="form-select"
+                      id="quantity-unit-input"
+                      name="quantityUnit"
+                    ></select>
+                  </div>
+                </div>
+
+                <div class="mb-3">
+                  <label for="cost-input" class="form-label">Cost</label>
+                  <div class="input-group">
+                    <span class="input-group-text">$</span>
+                    <input
+                      type="number"
+                      class="form-control"
+                      id="cost-input"
+                      name="cost"
+                      min="0"
+                      step="0.01"
+                      placeholder="0.00"
+                    />
+                  </div>
                 </div>
 
                 <button type="submit" class="btn btn-primary">Add Item</button>

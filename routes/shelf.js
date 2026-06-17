@@ -28,7 +28,11 @@ router.put("/:id", async (req, res) => {
       {
         $set: {
           name: req.body.name,
+          storedDate: req.body.storedDate,
           expirationDate: req.body.expirationDate,
+          quantity: req.body.quantity,
+          quantityUnit: req.body.quantityUnit,
+          cost: req.body.cost,
         },
       }
     );
@@ -56,6 +60,9 @@ router.post("/", async (req, res) => {
       name: req.body.name,
       storedDate: req.body.storedDate,
       expirationDate: req.body.expirationDate,
+      quantity: req.body.quantity,
+      quantityUnit: req.body.quantityUnit,
+      cost: req.body.cost,
     };
 
     const result = await shelfCollection.insertOne(newItem);
