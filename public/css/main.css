@@ -171,6 +171,44 @@ body {
   --bs-table-bg: #fff1f2;
 }
 
+/* Priority cell: urgency badge + dollars at risk */
+.priority-cell {
+  display: inline-flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  align-items: flex-start;
+}
+
+.priority-badge {
+  display: inline-block;
+  padding: 0.15rem 0.5rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+.priority-badge-good {
+  background-color: #dcfce7;
+  color: #15803d;
+}
+
+.priority-badge-urgent {
+  background-color: #fef3c7;
+  color: #b45309;
+}
+
+.priority-badge-expired {
+  background-color: #fee2e2;
+  color: #b91c1c;
+}
+
+.priority-at-risk {
+  font-size: 0.75rem;
+  color: var(--sl-text-muted);
+}
+
 /* Shelf toolbar */
 .shelf-toolbar {
   display: flex;

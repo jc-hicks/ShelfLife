@@ -7,19 +7,24 @@ const historyCollection = db.collection("history");
 
 const router = express.Router();
 
-// An item removed on or after its expiration date was wasted; otherwise the
-// user used it in time and its cost counts as value saved.
-function isExpired(expirationDate) {
+const SAVED_WINDOW_DAYS = 7;
+
+function getRemovalOutcome(expirationDate) {
   if (!expirationDate) {
-    return false;
+    return "used";
   }
 
   const today = new Date();
   today.setHours(0, 0, 0, 0);
   const [year, month, day] = String(expirationDate).split("-").map(Number);
   const target = new Date(year, month - 1, day);
+  const daysLeft = Math.round((target - today) / (1000 * 60 * 60 * 24));
 
-  return target < today;
+  if (daysLeft < 0) {
+    return "wasted";
+  }
+
+  return daysLeft <= SAVED_WINDOW_DAYS ? "saved" : "used";
 }
 
 router.get("/", async (req, res) => {
@@ -109,7 +114,7 @@ router.delete("/:id", async (req, res) => {
     }
 
     const value = Number(item.cost);
-    const expired = isExpired(item.expirationDate);
+    const outcome = getRemovalOutcome(item.expirationDate);
 
     await historyCollection.insertOne({
       name: item.name,
@@ -120,7 +125,7 @@ router.delete("/:id", async (req, res) => {
       cost: item.cost ?? null,
       category: item.category ?? null,
       value: Number.isNaN(value) ? 0 : value,
-      outcome: expired ? "wasted" : "saved",
+      outcome,
       removedDate: new Date(),
     });
 

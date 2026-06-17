@@ -21,8 +21,8 @@
     "url": "git+https://github.com/jc-hicks/ShelfLife.git"
   },
   "keywords": [],
-  "author": "",
-  "license": "ISC",
+  "author": "James Hicks and Alexandra Descoteaux",
+  "license": "MIT",
   "type": "module",
   "bugs": {
     "url": "https://github.com/jc-hicks/ShelfLife/issues"

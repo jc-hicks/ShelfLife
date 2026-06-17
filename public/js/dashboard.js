@@ -3,6 +3,13 @@ import {
   refreshSavingsChart,
   refreshWasteMap,
 } from "./insights.js";
+import {
+  getDaysUntilExpiration,
+  getCostLostPerDay,
+  applyShelfSort,
+  normalizeFilterText,
+  filterShelfItems,
+} from "./shelf-filters.js";
 
 let editingItemId = null;
 let allShelfItems = [];
@@ -144,57 +151,72 @@ function formatQuantity(food) {
   return `${quantity} ${unit}`;
 }
 
-function getDaysUntilExpiration(expirationDate) {
-  if (!expirationDate) {
-    return null;
-  }
-
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  const [year, month, day] = expirationDate.split("-").map(Number);
-  const target = new Date(year, month - 1, day);
-
-  return Math.round((target - today) / (1000 * 60 * 60 * 24));
-}
-
-function getCostLostPerDay(food) {
+// Short urgency label driven purely by days remaining.
+function getPriorityLabel(food) {
   const daysLeft = getDaysUntilExpiration(food.expirationDate);
 
   if (daysLeft === null) {
-    return null;
-  }
-
-  const cost = Number(food.cost);
-  const totalValue = Number.isNaN(cost) ? 0 : cost;
-
-  if (daysLeft <= 0) {
-    return totalValue > 0 ? Infinity : 0;
-  }
-
-  return totalValue / daysLeft;
-}
-
-function formatCostLostPerDay(food) {
-  const daysLeft = getDaysUntilExpiration(food.expirationDate);
-  const priority = getCostLostPerDay(food);
-
-  if (priority === null) {
     return "—";
   }
 
-  if (daysLeft !== null && daysLeft < 0) {
+  if (daysLeft < 0) {
     return "Expired";
   }
 
   if (daysLeft === 0) {
-    return priority > 0 ? "Use today" : "—";
+    return "Use today";
   }
 
-  if (priority === 0) {
-    return "—";
+  return daysLeft === 1 ? "1 day" : `${daysLeft} days`;
+}
+
+// Dollar value at stake if the item spoils — used as supporting context.
+function getValueAtRisk(food) {
+  const cost = Number(food.cost);
+  return Number.isNaN(cost) ? 0 : cost;
+}
+
+// Plain-text version of the priority cell, for search matching.
+function formatPriorityText(food) {
+  const label = getPriorityLabel(food);
+  const atRisk = getValueAtRisk(food);
+
+  if (label === "—") {
+    return label;
   }
 
-  return `$${priority.toFixed(2)}/day`;
+  return atRisk > 0 ? `${label} $${atRisk.toFixed(2)} at risk` : label;
+}
+
+// Badge + at-risk dollars. Badge color mirrors the row's expiry state so the
+// priority reads at a glance, while the cost-weighted sort stays under the hood.
+function renderPriorityCell(food) {
+  const label = getPriorityLabel(food);
+
+  if (label === "—") {
+    return '<span class="text-muted">—</span>';
+  }
+
+  const rowClass = getShelfRowClass(food);
+  const variant =
+    rowClass === "shelf-row-expired"
+      ? "expired"
+      : rowClass === "shelf-row-urgent"
+        ? "urgent"
+        : "good";
+
+  const atRisk = getValueAtRisk(food);
+  const atRiskHtml =
+    atRisk > 0
+      ? `<span class="priority-at-risk">$${atRisk.toFixed(2)} at risk</span>`
+      : "";
+
+  return `
+    <span class="priority-cell">
+      <span class="priority-badge priority-badge-${variant}">${escapeHtml(label)}</span>
+      ${atRiskHtml}
+    </span>
+  `;
 }
 
 function getShelfRowClass(food) {
@@ -213,27 +235,6 @@ function getShelfRowClass(food) {
   }
 
   return "shelf-row-good";
-}
-
-function sortShelfByPriority(items) {
-  return [...items].sort((a, b) => {
-    const priorityA = getCostLostPerDay(a);
-    const priorityB = getCostLostPerDay(b);
-
-    if (priorityA === null && priorityB === null) {
-      return 0;
-    }
-
-    if (priorityA === null) {
-      return 1;
-    }
-
-    if (priorityB === null) {
-      return -1;
-    }
-
-    return priorityB - priorityA;
-  });
 }
 
 function getShelfSortValue(food, column) {
@@ -263,30 +264,6 @@ function getShelfSortValue(food, column) {
     default:
       return null;
   }
-}
-
-function compareSortValues(a, b, direction) {
-  if (a === null && b === null) return 0;
-  if (a === null) return 1;
-  if (b === null) return -1;
-
-  if (a < b) return direction === "desc" ? 1 : -1;
-  if (a > b) return direction === "desc" ? -1 : 1;
-  return 0;
-}
-
-function applyShelfSort(items) {
-  if (!shelfSort.column) {
-    return sortShelfByPriority(items);
-  }
-
-  return [...items].sort((a, b) =>
-    compareSortValues(
-      getShelfSortValue(a, shelfSort.column),
-      getShelfSortValue(b, shelfSort.column),
-      shelfSort.direction
-    )
-  );
 }
 
 function updateShelfSortIndicators() {
@@ -320,15 +297,9 @@ function toggleShelfSort(column) {
   renderShelfTable();
 }
 
-function normalizeFilterText(value) {
-  return String(value ?? "")
-    .trim()
-    .toLowerCase();
-}
-
 function getShelfSearchText(food) {
   return [
-    formatCostLostPerDay(food),
+    formatPriorityText(food),
     food.name,
     food.category || DEFAULT_CATEGORY,
     formatQuantity(food),
@@ -343,22 +314,6 @@ function getShelfSearchText(food) {
 function getShelfSearchTerm() {
   const searchInput = document.getElementById("shelf-search-input");
   return normalizeFilterText(searchInput?.value);
-}
-
-function shelfItemMatchesSearch(food, searchTerm) {
-  if (editingItemId === food._id) {
-    return true;
-  }
-
-  if (!searchTerm) {
-    return true;
-  }
-
-  return getShelfSearchText(food).includes(searchTerm);
-}
-
-function filterShelfItems(items, searchTerm) {
-  return items.filter((food) => shelfItemMatchesSearch(food, searchTerm));
 }
 
 function updateShelfResultsNote(visibleCount, totalCount, searchTerm) {
@@ -384,8 +339,16 @@ function updateShelfResultsNote(visibleCount, totalCount, searchTerm) {
 function renderShelfTable() {
   const tableBody = document.getElementById("shelf-table-body");
   const searchTerm = getShelfSearchTerm();
-  const sortedShelf = applyShelfSort(allShelfItems);
-  const visibleShelf = filterShelfItems(sortedShelf, searchTerm);
+  const sortedShelf = applyShelfSort(
+    allShelfItems,
+    shelfSort,
+    getShelfSortValue
+  );
+  const visibleShelf = filterShelfItems(sortedShelf, {
+    searchTerm,
+    getSearchText: getShelfSearchText,
+    keepId: editingItemId,
+  });
 
   updateShelfResultsNote(visibleShelf.length, allShelfItems.length, searchTerm);
 
@@ -567,7 +530,7 @@ function renderShelfRow(food, index) {
   return `
     <tr class="${rowClass}" data-id="${food._id}">
       <td>${index + 1}</td>
-      <td>${formatCostLostPerDay(food)}</td>
+      <td>${renderPriorityCell(food)}</td>
       <td>${escapeHtml(food.name)}</td>
       <td>${escapeHtml(food.category || DEFAULT_CATEGORY)}</td>
       <td>${formatQuantity(food)}</td>

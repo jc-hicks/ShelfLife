@@ -34,14 +34,23 @@ router.get("/stats", async (req, res) => {
         if (item.outcome === "wasted") {
           acc.totalLost += amount;
           acc.wastedCount += 1;
-        } else {
+        } else if (item.outcome === "saved") {
           acc.totalSaved += amount;
           acc.savedCount += 1;
+        } else {
+          // "used" — removed well before expiry; neutral to savings and loss.
+          acc.usedCount += 1;
         }
 
         return acc;
       },
-      { totalSaved: 0, totalLost: 0, savedCount: 0, wastedCount: 0 }
+      {
+        totalSaved: 0,
+        totalLost: 0,
+        savedCount: 0,
+        wastedCount: 0,
+        usedCount: 0,
+      }
     );
 
     res.json(stats);
@@ -61,6 +70,10 @@ router.get("/by-category", async (req, res) => {
     const byCategory = new Map();
 
     for (const item of items) {
+      if (item.outcome !== "wasted" && item.outcome !== "saved") {
+        continue;
+      }
+
       const category = item.category || "Uncategorized";
       const entry = byCategory.get(category) || {
         category,

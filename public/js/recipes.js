@@ -5,6 +5,12 @@ async function loadRecipeRecommendations() {
     const recipeList = document.getElementById("recipe-list");
     const recipeCount = document.getElementById("recipe-count");
 
+    if (recipeCount) {
+      recipeCount.textContent = `${recommendations.length} recipe${
+        recommendations.length === 1 ? "" : "s"
+      }`;
+    }
+
     recipeList.innerHTML = recommendations.length
       ? recommendations
           .map(

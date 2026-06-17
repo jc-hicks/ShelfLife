@@ -327,14 +327,59 @@ const removed = [
     outcome: "saved",
     daysAgo: 19,
   },
+
+  // Used well before expiry — neutral, excluded from savings/loss and the
+  // waste map. Spread across categories to show normal early consumption.
+  {
+    name: "Russet potatoes",
+    category: "Produce",
+    cost: 3.99,
+    outcome: "used",
+    daysAgo: 5,
+  },
+  {
+    name: "Pasta sauce",
+    category: "Pantry & Canned",
+    cost: 3.49,
+    outcome: "used",
+    daysAgo: 9,
+  },
+  {
+    name: "Frozen pizza",
+    category: "Frozen",
+    cost: 6.49,
+    outcome: "used",
+    daysAgo: 12,
+  },
+  {
+    name: "String cheese",
+    category: "Dairy & Eggs",
+    cost: 4.79,
+    outcome: "used",
+    daysAgo: 16,
+  },
+  {
+    name: "Sparkling water",
+    category: "Beverages",
+    cost: 4.99,
+    outcome: "used",
+    daysAgo: 21,
+  },
 ];
 
 function buildHistoryRecord(entry) {
-  // Wasted items lapsed before removal; saved items still had time left.
-  const expirationDate =
-    entry.outcome === "wasted"
-      ? dateOffset(-(entry.daysAgo + 2))
-      : dateOffset(-(entry.daysAgo - 5));
+  // Expiration relative to removal reflects the outcome:
+  //   wasted — already lapsed a couple days before removal
+  //   saved  — removed within the at-risk window (a few days before expiry)
+  //   used   — removed well before expiry (weeks of runway left)
+  let expirationDate;
+  if (entry.outcome === "wasted") {
+    expirationDate = dateOffset(-(entry.daysAgo + 2));
+  } else if (entry.outcome === "saved") {
+    expirationDate = dateOffset(-(entry.daysAgo - 5));
+  } else {
+    expirationDate = dateOffset(-entry.daysAgo + 21);
+  }
 
   return {
     name: entry.name,
