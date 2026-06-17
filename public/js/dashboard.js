@@ -19,29 +19,7 @@ async function loadShelfData() {
                 </button>
               </td>
             </tr>
-        `,
-      )
-      .join("");
-  } catch (error) {
-    console.error("Failed to load shelf data:", error);
-  }
-}
-
-async function loadPreppedMeals() {
-  try {
-    const response = await fetch("/data/shelfdata.json");
-    const shelfData = await response.json();
-    const tableBody = document.getElementById("shelf-table-body");
-
-    tableBody.innerHTML = shelfData
-      .map(
-        (food, index) => `
-        <tr>
-            <td>${index + 1}</td>
-            <td>${food.name}</td>
-            <td>${food.expirationDate}</td>
-            </tr>
-        `,
+        `
       )
       .join("");
   } catch (error) {
@@ -62,8 +40,8 @@ async function loadShoppingList() {
             <td>${index + 1}</td>
             <td>${list.item}</td>
             <td>${list.quantity}</td>
-            </tr>
-        `,
+        </tr>
+        `
       )
       .join("");
   } catch (error) {

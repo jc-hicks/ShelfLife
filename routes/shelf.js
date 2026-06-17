@@ -30,7 +30,7 @@ router.put("/:id", async (req, res) => {
           name: req.body.name,
           expirationDate: req.body.expirationDate,
         },
-      },
+      }
     );
 
     if (result.matchedCount === 0) {

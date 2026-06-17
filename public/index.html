@@ -25,7 +25,13 @@
   </head>
   <body>
     <nav class="navbar navbar-expand-lg bg-primary navbar-dark">
-      <a class="navbar-brand text-start" href="#">ShelfLife</a>
+      <div class="container">
+        <a class="navbar-brand text-start" href="/index.html">ShelfLife</a>
+        <div class="d-flex gap-2 ms-auto">
+          <a class="btn btn-outline-light btn-sm" href="/index.html">Pantry</a>
+          <a class="btn btn-outline-light btn-sm" href="/recipes.html">Recipes</a>
+        </div>
+      </div>
     </nav>
     <main>
       <div class="container mt-5">
@@ -57,13 +63,13 @@
         <div class="row mt-4">
           <div class="col-md-6">
             <div class="shopping-list">
-              <h2>Shopping List</h2>
+              <h2>Smart Shopping Suggestions</h2>
               <table class="table">
                 <thead>
                   <tr>
                     <th>#</th>
-                    <th>Name</th>
-                    <th>Quantity</th>
+                    <th>Ingredient</th>
+                    <th>Why</th>
                   </tr>
                 </thead>
 
@@ -116,18 +122,6 @@
 
                 <button type="submit" class="btn btn-primary">Add Item</button>
               </form>
-            </div>
-          </div>
-        </div>
-        <!-- Bottom Recipe Section -->
-        <div class="row mt-4">
-          <div class="col-12">
-            <div class="my-recipes">
-              <h3>My Suggested Recipes</h3>
-              Lorem ipsum dolor sit amet consectetur, adipisicing elit.
-              Accusamus quia fugiat impedit eum? Doloremque a non quidem
-              temporibus, aspernatur recusandae iste voluptate explicabo natus
-              facilis molestias aliquid sint cupiditate dicta.
             </div>
           </div>
         </div>
