@@ -1,3 +1,6 @@
 node_modules
 package-lock.json
 .claude
+
+# Generated dataset imported from TheMealDB (see database/fetch-dataset.js)
+database/dataset

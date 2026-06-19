@@ -10,6 +10,7 @@
     "lint:fix": "eslint . --fix",
     "serve": "http-server -c-1 -o",
     "dev": "reload -b -d .",
+    "fetch:dataset": "node database/fetch-dataset.js",
     "seed": "node database/seed.js",
     "start": "node server.js",
     "start:nodemon": "nodemon server.js",

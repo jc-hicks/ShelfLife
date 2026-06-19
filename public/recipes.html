@@ -20,7 +20,7 @@
     />
     <script
       src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"
-      integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB"
+      integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI"
       crossorigin="anonymous"
     ></script>
   </head>
@@ -37,140 +37,205 @@
 
     <header class="recipe-hero">
       <div class="container py-4">
+        <p class="eyebrow mb-1">Cook before it spoils</p>
         <h1 class="mb-2">Recipes</h1>
         <p class="mb-0">
-          Recipe ideas from what's on your shelf, plus a spot to track meal
-          prep.
+          Ideas built from what's on your shelf — the ones using soon-to-expire
+          ingredients come first.
         </p>
       </div>
     </header>
 
     <main>
-      <div class="container pb-5">
-        <div class="row g-4 mt-1">
+      <div class="container pb-5 pt-4">
+        <div class="row g-4">
           <div class="col-lg-7">
-            <section class="recipe-panel panel-shell">
+            <section class="panel-shell">
               <div
-                class="d-flex justify-content-between flex-wrap gap-3 align-items-end mb-3"
+                class="d-flex justify-content-between flex-wrap gap-2 align-items-center mb-3"
               >
-                <div>
-                  <h2 class="h3 mb-0">Recipe suggestions</h2>
+                <h2 class="h5 mb-0">Recipe suggestions</h2>
+                <div class="d-flex align-items-center gap-3">
+                  <span id="recipe-count" class="recipe-count-badge"></span>
+                  <button
+                    type="button"
+                    class="btn btn-primary btn-sm"
+                    data-bs-toggle="modal"
+                    data-bs-target="#add-recipe-modal"
+                  >
+                    + Add recipe
+                  </button>
                 </div>
-                <div id="recipe-count" class="badge text-bg-dark"></div>
               </div>
 
-              <div id="recipe-list" class="recipe-list"></div>
+              <form id="recipe-filter-form" class="recipe-filters mb-3">
+                <div class="recipe-filters-row">
+                  <div class="recipe-search-wrap">
+                    <label
+                      for="recipe-search-input"
+                      class="form-label visually-hidden"
+                    >
+                      Search recipes
+                    </label>
+                    <input
+                      type="search"
+                      class="form-control"
+                      id="recipe-search-input"
+                      placeholder="Search by name, ingredient, or tag…"
+                      list="recipe-ingredient-options"
+                      autocomplete="off"
+                    />
+                    <datalist id="recipe-ingredient-options"></datalist>
+                  </div>
+                  <label
+                    for="recipe-tag-select"
+                    class="form-label visually-hidden"
+                  >
+                    Filter by tag
+                  </label>
+                  <select
+                    class="form-select recipe-tag-select"
+                    id="recipe-tag-select"
+                  >
+                    <option value="">All tags</option>
+                  </select>
+                </div>
+                <div class="recipe-filters-row align-items-center">
+                  <div class="form-check mb-0">
+                    <input
+                      class="form-check-input"
+                      type="checkbox"
+                      id="recipe-ready-toggle"
+                    />
+                    <label class="form-check-label" for="recipe-ready-toggle">
+                      Only recipes I can make now
+                    </label>
+                  </div>
+                  <button
+                    type="button"
+                    class="btn btn-outline-secondary btn-sm ms-auto"
+                    id="recipe-clear-filters-btn"
+                  >
+                    Clear filters
+                  </button>
+                </div>
+              </form>
+
+              <div id="recipe-list" class="recipe-list">
+                <p class="text-muted mb-0">Loading recipes…</p>
+              </div>
+
+              <nav
+                id="recipe-pagination"
+                class="recipe-pagination"
+                aria-label="Recipe pages"
+              ></nav>
             </section>
           </div>
 
           <div class="col-lg-5">
-            <section class="detail-panel panel-shell h-100">
-              <div
-                class="d-flex justify-content-between align-items-start gap-3 mb-3"
-              >
-                <div>
-                  <h2 class="h3 mb-0">Recipe details</h2>
-                </div>
-              </div>
-
+            <section class="panel-shell detail-panel">
+              <h2 class="h5 mb-3">Recipe details</h2>
               <div id="recipe-detail" class="recipe-detail-empty text-muted">
-                Select a recipe to see the details here.
+                Select a recipe to see ingredients, timing, and steps here.
               </div>
             </section>
           </div>
         </div>
 
         <div class="row g-4 mt-1">
-          <div class="col-lg-6">
+          <div class="col-lg-5">
             <section class="panel-shell h-100">
-              <div
-                class="d-flex justify-content-between flex-wrap gap-3 align-items-end mb-3"
-              >
-                <div>
-                  <h2 class="h3 mb-0">Shopping list</h2>
-                </div>
-              </div>
-
-              <table class="table align-middle mb-0">
+              <h2 class="h5 mb-1">Shopping list</h2>
+              <p class="text-muted small mb-3">
+                What to buy to unlock recipes you almost have.
+              </p>
+              <table class="table recipe-table align-middle mb-0">
                 <thead>
                   <tr>
-                    <th>#</th>
                     <th>Ingredient</th>
                     <th>Why</th>
                   </tr>
                 </thead>
                 <tbody id="shopping-suggestions-table">
                   <tr>
-                    <td colspan="3" class="text-muted">
-                      Loading suggestions...
-                    </td>
+                    <td colspan="2" class="text-muted">Loading suggestions…</td>
                   </tr>
                 </tbody>
               </table>
             </section>
           </div>
 
-          <div class="col-lg-6">
+          <div class="col-lg-7">
             <section class="panel-shell h-100">
-              <div
-                class="d-flex justify-content-between flex-wrap gap-3 align-items-end mb-3"
-              >
-                <div>
-                  <h2 class="h3 mb-0">Meal prep</h2>
-                </div>
-              </div>
+              <h2 class="h5 mb-1">Meal prep tracker</h2>
+              <p class="text-muted small mb-3">
+                Log batch-cooked food so it gets eaten before it turns.
+              </p>
 
               <form id="meal-prep-form" class="mb-4">
                 <div class="row g-3">
-                  <div class="col-md-6">
-                    <label for="meal-prep-name" class="form-label"
-                      >Meal name</label
-                    >
+                  <div class="col-md-4">
+                    <label for="meal-prep-name" class="form-label">Meal</label>
                     <input
                       id="meal-prep-name"
                       class="form-control"
                       type="text"
+                      placeholder="e.g. Chicken fried rice"
+                      required
                     />
                   </div>
                   <div class="col-md-3">
-                    <label for="meal-prep-date" class="form-label"
-                      >Prepared on</label
-                    >
+                    <label for="meal-prep-date" class="form-label">
+                      Prepared
+                    </label>
                     <input
                       id="meal-prep-date"
                       class="form-control"
                       type="date"
+                      required
                     />
                   </div>
                   <div class="col-md-3">
-                    <label for="meal-prep-expiration" class="form-label"
-                      >Use by</label
-                    >
+                    <label for="meal-prep-expiration" class="form-label">
+                      Use by
+                    </label>
                     <input
                       id="meal-prep-expiration"
                       class="form-control"
                       type="date"
+                      required
                     />
                   </div>
+                  <div class="col-md-2 d-flex align-items-end">
+                    <button type="submit" class="btn btn-primary w-100">
+                      Add
+                    </button>
+                  </div>
+                  <div class="col-12">
+                    <label for="meal-prep-recipe" class="form-label">
+                      From a recipe (optional)
+                    </label>
+                    <select class="form-select" id="meal-prep-recipe">
+                      <option value="">Not from a saved recipe</option>
+                    </select>
+                  </div>
                 </div>
-                <button type="submit" class="btn btn-primary mt-3">
-                  Add meal prep item
-                </button>
               </form>
 
-              <table class="table align-middle mb-0">
+              <table class="table recipe-table align-middle mb-0">
                 <thead>
                   <tr>
-                    <th>#</th>
                     <th>Meal</th>
+                    <th>Prepared</th>
                     <th>Use by</th>
-                    <th>Action</th>
+                    <th class="text-end">Action</th>
                   </tr>
                 </thead>
                 <tbody id="meal-prep-table">
                   <tr>
                     <td colspan="4" class="text-muted">
-                      Loading meal prep items...
+                      Loading meal prep items…
                     </td>
                   </tr>
                 </tbody>
@@ -181,6 +246,168 @@
       </div>
     </main>
 
-    <script src="js/recipes.js"></script>
+    <div
+      class="modal fade"
+      id="add-recipe-modal"
+      tabindex="-1"
+      aria-labelledby="add-recipe-title"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog modal-lg modal-dialog-scrollable">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h2 class="modal-title h5" id="add-recipe-title">
+              Add your own recipe
+            </h2>
+            <button
+              type="button"
+              class="btn-close"
+              data-bs-dismiss="modal"
+              aria-label="Close"
+            ></button>
+          </div>
+          <div class="modal-body">
+            <form id="add-recipe-form">
+              <div
+                class="alert alert-danger d-none"
+                id="add-recipe-error"
+                role="alert"
+              ></div>
+
+              <div class="mb-3">
+                <label for="add-recipe-name" class="form-label">
+                  Recipe name
+                </label>
+                <input
+                  type="text"
+                  class="form-control"
+                  id="add-recipe-name"
+                  required
+                />
+              </div>
+
+              <div class="mb-3">
+                <label for="add-recipe-tags" class="form-label">Tags</label>
+                <input
+                  type="text"
+                  class="form-control"
+                  id="add-recipe-tags"
+                  placeholder="Dinner, Vegetarian, Quick (comma separated)"
+                />
+              </div>
+
+              <div class="row g-3 mb-3">
+                <div class="col-6 col-md-3">
+                  <label for="add-recipe-prep" class="form-label">
+                    Prep (min)
+                  </label>
+                  <input
+                    type="number"
+                    class="form-control"
+                    id="add-recipe-prep"
+                    min="0"
+                  />
+                </div>
+                <div class="col-6 col-md-3">
+                  <label for="add-recipe-cook" class="form-label">
+                    Cook (min)
+                  </label>
+                  <input
+                    type="number"
+                    class="form-control"
+                    id="add-recipe-cook"
+                    min="0"
+                  />
+                </div>
+                <div class="col-6 col-md-3">
+                  <label for="add-recipe-servings" class="form-label">
+                    Servings
+                  </label>
+                  <input
+                    type="number"
+                    class="form-control"
+                    id="add-recipe-servings"
+                    min="1"
+                  />
+                </div>
+                <div class="col-6 col-md-3">
+                  <label for="add-recipe-difficulty" class="form-label">
+                    Difficulty
+                  </label>
+                  <select class="form-select" id="add-recipe-difficulty">
+                    <option value="">—</option>
+                    <option value="Easy">Easy</option>
+                    <option value="Medium">Medium</option>
+                    <option value="Hard">Hard</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="mb-3">
+                <label for="add-recipe-ingredients" class="form-label">
+                  Ingredients (one per line)
+                </label>
+                <textarea
+                  class="form-control"
+                  id="add-recipe-ingredients"
+                  rows="5"
+                  placeholder="Eggs&#10;Spinach&#10;Cheddar cheese"
+                  required
+                ></textarea>
+              </div>
+
+              <div class="mb-3">
+                <label for="add-recipe-instructions" class="form-label">
+                  Steps (one per line)
+                </label>
+                <textarea
+                  class="form-control"
+                  id="add-recipe-instructions"
+                  rows="5"
+                  placeholder="Whisk the eggs.&#10;Wilt the spinach.&#10;Fold together and serve."
+                  required
+                ></textarea>
+              </div>
+
+              <div class="mb-3">
+                <label for="add-recipe-notes" class="form-label">
+                  Tip (optional)
+                </label>
+                <input type="text" class="form-control" id="add-recipe-notes" />
+              </div>
+
+              <div class="form-check">
+                <input
+                  class="form-check-input"
+                  type="checkbox"
+                  id="add-recipe-mealprep"
+                />
+                <label class="form-check-label" for="add-recipe-mealprep">
+                  Good for meal prep
+                </label>
+              </div>
+            </form>
+          </div>
+          <div class="modal-footer">
+            <button
+              type="button"
+              class="btn btn-outline-secondary"
+              data-bs-dismiss="modal"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              class="btn btn-primary"
+              form="add-recipe-form"
+            >
+              Save recipe
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script type="module" src="js/recipes.js"></script>
   </body>
 </html>

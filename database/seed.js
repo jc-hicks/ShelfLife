@@ -1,4 +1,22 @@
+import { readFile } from "node:fs/promises";
+
 import { db } from "./db.js";
+import { recipeCatalog } from "./recipe-data.js";
+
+// Load a committed dataset file (see database/fetch-dataset.js). Returns an
+// empty array if it hasn't been generated yet, so seeding still works with just
+// the curated catalog.
+async function loadDataset(fileName) {
+  try {
+    const url = new URL(`./dataset/${fileName}`, import.meta.url);
+    return JSON.parse(await readFile(url, "utf8"));
+  } catch {
+    console.warn(
+      `Dataset file ${fileName} not found — run "npm run fetch:dataset" to import it.`
+    );
+    return [];
+  }
+}
 
 // Dates are generated relative to "today" so the shelf always has a realistic
 // mix of fresh, expiring-soon, and expired items regardless of when this runs.
@@ -53,6 +71,69 @@ const shelfItems = [
     storedDate: dateOffset(-4),
     expirationDate: dateOffset(13),
   },
+  {
+    name: "Roma tomatoes",
+    category: "Produce",
+    quantity: 5,
+    quantityUnit: "item",
+    cost: 2.99,
+    storedDate: dateOffset(-3),
+    expirationDate: dateOffset(2),
+  },
+  {
+    name: "Bell peppers",
+    category: "Produce",
+    quantity: 3,
+    quantityUnit: "item",
+    cost: 3.5,
+    storedDate: dateOffset(-3),
+    expirationDate: dateOffset(7),
+  },
+  {
+    name: "Yellow onion",
+    category: "Produce",
+    quantity: 3,
+    quantityUnit: "item",
+    cost: 1.5,
+    storedDate: dateOffset(-6),
+    expirationDate: dateOffset(25),
+  },
+  {
+    name: "Green onion",
+    category: "Produce",
+    quantity: 1,
+    quantityUnit: "bunch",
+    cost: 0.99,
+    storedDate: dateOffset(-2),
+    expirationDate: dateOffset(4),
+  },
+  {
+    name: "Garlic",
+    category: "Produce",
+    quantity: 1,
+    quantityUnit: "head",
+    cost: 0.79,
+    storedDate: dateOffset(-10),
+    expirationDate: dateOffset(40),
+  },
+  {
+    name: "Lemons",
+    category: "Produce",
+    quantity: 3,
+    quantityUnit: "item",
+    cost: 1.5,
+    storedDate: dateOffset(-4),
+    expirationDate: dateOffset(14),
+  },
+  {
+    name: "Russet potatoes",
+    category: "Produce",
+    quantity: 5,
+    quantityUnit: "lb",
+    cost: 3.99,
+    storedDate: dateOffset(-8),
+    expirationDate: dateOffset(30),
+  },
   // Dairy & Eggs
   {
     name: "Whole milk",
@@ -81,6 +162,24 @@ const shelfItems = [
     storedDate: dateOffset(-6),
     expirationDate: dateOffset(21),
   },
+  {
+    name: "Cheddar cheese",
+    category: "Dairy & Eggs",
+    quantity: 8,
+    quantityUnit: "oz",
+    cost: 4.49,
+    storedDate: dateOffset(-7),
+    expirationDate: dateOffset(18),
+  },
+  {
+    name: "Butter",
+    category: "Dairy & Eggs",
+    quantity: 1,
+    quantityUnit: "package",
+    cost: 4.29,
+    storedDate: dateOffset(-9),
+    expirationDate: dateOffset(35),
+  },
   // Meat & Seafood — one expiring tomorrow, one already expired
   {
     name: "Chicken breast",
@@ -99,6 +198,15 @@ const shelfItems = [
     cost: 12.99,
     storedDate: dateOffset(-5),
     expirationDate: dateOffset(-1),
+  },
+  {
+    name: "Sliced ham",
+    category: "Meat & Seafood",
+    quantity: 8,
+    quantityUnit: "oz",
+    cost: 5.49,
+    storedDate: dateOffset(-4),
+    expirationDate: dateOffset(2),
   },
   // Grains & Bakery
   {
@@ -119,6 +227,24 @@ const shelfItems = [
     storedDate: dateOffset(-2),
     expirationDate: dateOffset(8),
   },
+  {
+    name: "Flour tortillas",
+    category: "Grains & Bakery",
+    quantity: 10,
+    quantityUnit: "item",
+    cost: 2.99,
+    storedDate: dateOffset(-5),
+    expirationDate: dateOffset(20),
+  },
+  {
+    name: "Rolled oats",
+    category: "Grains & Bakery",
+    quantity: 1,
+    quantityUnit: "container",
+    cost: 3.79,
+    storedDate: dateOffset(-30),
+    expirationDate: dateOffset(300),
+  },
   // Pantry & Canned — long shelf life
   {
     name: "Canned black beans",
@@ -138,6 +264,24 @@ const shelfItems = [
     storedDate: dateOffset(-30),
     expirationDate: dateOffset(400),
   },
+  {
+    name: "White rice",
+    category: "Pantry & Canned",
+    quantity: 1,
+    quantityUnit: "bag",
+    cost: 6.49,
+    storedDate: dateOffset(-45),
+    expirationDate: dateOffset(500),
+  },
+  {
+    name: "Olive oil",
+    category: "Pantry & Canned",
+    quantity: 1,
+    quantityUnit: "bottle",
+    cost: 8.99,
+    storedDate: dateOffset(-40),
+    expirationDate: dateOffset(300),
+  },
   // Frozen
   {
     name: "Frozen peas",
@@ -147,6 +291,15 @@ const shelfItems = [
     cost: 2.19,
     storedDate: dateOffset(-15),
     expirationDate: dateOffset(220),
+  },
+  {
+    name: "Frozen blueberries",
+    category: "Frozen",
+    quantity: 1,
+    quantityUnit: "bag",
+    cost: 4.49,
+    storedDate: dateOffset(-20),
+    expirationDate: dateOffset(180),
   },
   // Beverages
   {
@@ -398,21 +551,45 @@ function buildHistoryRecord(entry) {
 async function seed() {
   const shelfCollection = db.collection("shelf");
   const historyCollection = db.collection("history");
+  const recipeCollection = db.collection("recipes");
+  const ingredientCollection = db.collection("ingredients");
+
+  const [importedRecipes, importedIngredients] = await Promise.all([
+    loadDataset("recipes.json"),
+    loadDataset("ingredients.json"),
+  ]);
+
+  // The hand-written catalog comes first so its pantry-matched recipes rank
+  // ahead of the broader imported set on the recipe page.
+  const allRecipes = [...recipeCatalog, ...importedRecipes];
 
   const clearedShelf = await shelfCollection.deleteMany({});
   const clearedHistory = await historyCollection.deleteMany({});
+  const clearedRecipes = await recipeCollection.deleteMany({});
+  const clearedIngredients = await ingredientCollection.deleteMany({});
   console.log(
-    `Cleared ${clearedShelf.deletedCount} shelf and ${clearedHistory.deletedCount} history records.`
+    `Cleared ${clearedShelf.deletedCount} shelf, ${clearedHistory.deletedCount} history, ${clearedRecipes.deletedCount} recipe, and ${clearedIngredients.deletedCount} ingredient records.`
   );
 
   const shelfResult = await shelfCollection.insertMany(shelfItems);
   const historyResult = await historyCollection.insertMany(
     removed.map(buildHistoryRecord)
   );
+  const recipeResult = await recipeCollection.insertMany(allRecipes);
+  const ingredientResult = importedIngredients.length
+    ? await ingredientCollection.insertMany(importedIngredients)
+    : { insertedCount: 0 };
+
+  const total =
+    shelfResult.insertedCount +
+    historyResult.insertedCount +
+    recipeResult.insertedCount +
+    ingredientResult.insertedCount;
 
   console.log(
-    `Inserted ${shelfResult.insertedCount} shelf items and ${historyResult.insertedCount} history records.`
+    `Inserted ${shelfResult.insertedCount} shelf items, ${historyResult.insertedCount} history records, ${recipeResult.insertedCount} recipes, and ${ingredientResult.insertedCount} ingredients.`
   );
+  console.log(`Total records across all collections: ${total}.`);
 }
 
 seed()

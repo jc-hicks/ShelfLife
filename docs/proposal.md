@@ -24,9 +24,12 @@ See [user-stories.md](user-stories.md) for the grouped user stories and use case
 
 ### Recipe Page
 
-- Recipe recommendation cards with cook time and matched ingredients.
-- Recipe detail panel with ingredients, missing items, and step-by-step instructions.
-- Shopping suggestions table that shows what to buy next.
+- Searchable, filterable recipe list (by name, ingredient, or tag, plus a
+  "make it now" toggle) with cards showing cook time, tags, and a match meter.
+- Recipe recommendation order prioritizes ingredients nearing expiration.
+- Recipe detail panel with an ingredient checklist (on hand vs. need to buy),
+  timing, difficulty, and step-by-step instructions.
+- Shopping suggestions table that shows what to buy to unlock near-ready recipes.
 - Meal-prep tracker with form inputs and a separate list of prepared foods.
 
 ### Simple Wireframe
@@ -50,12 +53,17 @@ ShelfLife Recipes
 ## Core Features
 
 - Pantry management with add, update, delete, and expiration tracking.
-- Recipe recommendations based on pantry inventory.
-- Recipe detail views with ingredients and instructions.
+- Recipe search and recommendations based on pantry inventory, weighted toward
+  ingredients that are about to expire.
+- Recipe detail views with an ingredient checklist and instructions.
+- Smart shopping suggestions for recipes you can almost make.
+- Meal-prep tracking with use-by reminders.
 
 ## Technical Notes
 
 - Backend: Node.js, Express, MongoDB
 - Frontend: Vanilla JavaScript, HTML5, CSS
 - Rendering: Client-side DOM updates with fetch requests
-- Data collections: `shelf` and `mealPrep`
+- Data collections: `shelf`, `history`, `recipes`, `ingredients`, and `mealPrep`
+- Recipe and ingredient data imported from the free TheMealDB API (see
+  `database/fetch-dataset.js`)

@@ -1,3 +1,6 @@
+/* Recipe page styles. Builds on the design tokens defined in main.css so the
+   panels, badges, and tables read the same as the pantry dashboard. */
+
 .recipe-page {
   background: var(--sl-bg);
   min-height: 100vh;
@@ -9,6 +12,11 @@
   border-bottom: 1px solid var(--sl-border);
 }
 
+.recipe-hero h1 {
+  font-family: "Forum", serif;
+  letter-spacing: 0.01em;
+}
+
 .eyebrow {
   letter-spacing: 0.2em;
   text-transform: uppercase;
@@ -16,18 +24,50 @@
   color: var(--sl-text-muted);
 }
 
-.hero-card,
-.panel-shell,
-.recipe-card {
+/* Panels */
+.panel-shell {
   background: var(--sl-surface);
   border: 1px solid var(--sl-border);
   border-radius: var(--sl-radius);
   box-shadow: var(--sl-shadow);
+  padding: 1.5rem;
 }
 
-.hero-card,
-.panel-shell {
-  padding: 1.25rem;
+.panel-shell h2 {
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--sl-text);
+}
+
+.recipe-count-badge {
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--sl-text-muted);
+}
+
+/* Filter toolbar */
+.recipe-filters {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--sl-border);
+}
+
+.recipe-filters-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.recipe-search-wrap {
+  flex: 1 1 16rem;
+}
+
+.recipe-tag-select {
+  flex: 0 1 12rem;
 }
 
 .recipe-list {
@@ -35,10 +75,155 @@
   gap: 1rem;
 }
 
-.recipe-card {
-  padding: 1rem;
+/* On wide screens the list and detail sit side by side, each scrolling within
+   its own column so the page layout stays put — a long recipe scrolls inside
+   the detail panel instead of running off the bottom of the page. On narrow
+   screens the panels stack and the page scrolls normally. */
+@media (min-width: 992px) {
+  .recipe-list {
+    /* Leaves room for the filter form sharing this panel above the list. */
+    max-height: 70vh;
+    overflow-y: auto;
+    /* Room for the scrollbar and the active card's focus ring. */
+    padding: 2px 0.5rem 2px 2px;
+  }
+
+  .detail-panel {
+    position: sticky;
+    top: 1rem;
+    max-height: calc(100vh - 2rem);
+    display: flex;
+    flex-direction: column;
+  }
+
+  .detail-panel #recipe-detail {
+    flex: 1 1 auto;
+    overflow-y: auto;
+    padding-right: 0.25rem;
+  }
 }
 
+.recipe-card {
+  background: var(--sl-surface);
+  border: 1px solid var(--sl-border);
+  border-radius: var(--sl-radius);
+  box-shadow: var(--sl-shadow);
+  padding: 1.1rem 1.25rem;
+  cursor: pointer;
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+.recipe-card:hover {
+  border-color: #a1a1aa;
+}
+
+.recipe-card.is-active {
+  border-color: var(--sl-accent);
+  box-shadow: 0 0 0 2px rgb(var(--sl-accent-rgb) / 12%);
+}
+
+.recipe-card-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 0.75rem;
+  margin-bottom: 0.25rem;
+}
+
+.recipe-card-title {
+  font-size: 1.05rem;
+  font-weight: 600;
+  margin: 0;
+}
+
+.recipe-status {
+  display: inline-block;
+  padding: 0.15rem 0.55rem;
+  border-radius: 999px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.recipe-status-ready {
+  background: #dcfce7;
+  color: #15803d;
+}
+
+.recipe-status-expiring {
+  background: #fef3c7;
+  color: #b45309;
+}
+
+.recipe-meta {
+  font-size: 0.8125rem;
+  color: var(--sl-text-muted);
+  margin-bottom: 0.5rem;
+}
+
+.recipe-reason {
+  font-size: 0.875rem;
+  margin-bottom: 0.75rem;
+}
+
+/* Tag chips */
+.recipe-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin-bottom: 0.75rem;
+}
+
+.recipe-tag {
+  font-size: 0.7rem;
+  font-weight: 500;
+  padding: 0.1rem 0.5rem;
+  border-radius: 999px;
+  background: var(--sl-bg);
+  border: 1px solid var(--sl-border);
+  color: var(--sl-text-muted);
+}
+
+/* Match meter */
+.recipe-match {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin-bottom: 0.9rem;
+}
+
+.recipe-match-track {
+  flex: 1 1 auto;
+  height: 6px;
+  background: var(--sl-border);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.recipe-match-fill {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+}
+
+.recipe-match-fill-full {
+  background: #16a34a;
+}
+
+.recipe-match-fill-partial {
+  background: #f59e0b;
+}
+
+.recipe-match-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--sl-text-muted);
+  white-space: nowrap;
+}
+
+/* Detail panel (sticky + internal scroll applied at the lg breakpoint above) */
 .recipe-detail-empty {
   min-height: 320px;
   display: flex;
@@ -50,7 +235,177 @@
   border-radius: var(--sl-radius);
 }
 
-.detail-hero {
+.recipe-detail-head {
   padding-bottom: 1rem;
   border-bottom: 1px solid var(--sl-border);
+  margin-bottom: 1rem;
+}
+
+.recipe-detail-image {
+  width: 100%;
+  height: 200px;
+  object-fit: cover;
+  border-radius: var(--sl-radius);
+  margin-bottom: 0.75rem;
+}
+
+.recipe-source {
+  font-size: 0.75rem;
+  color: var(--sl-text-muted);
+  margin: 1.25rem 0 0;
+}
+
+/* Pagination sits below the scrollable list and stays visible. */
+.recipe-pagination {
+  display: flex;
+  justify-content: center;
+  margin-top: 1rem;
+}
+
+.recipe-pagination .page-link {
+  color: var(--sl-text);
+  cursor: pointer;
+}
+
+.recipe-pagination .page-item.active .page-link {
+  background-color: var(--sl-accent);
+  border-color: var(--sl-accent);
+  color: #ffffff;
+}
+
+.recipe-detail-subhead {
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--sl-text-muted);
+  margin: 1.25rem 0 0.6rem;
+}
+
+.recipe-expiring-callout {
+  font-size: 0.875rem;
+  background: #fffbeb;
+  border: 1px solid #fde68a;
+  color: #92400e;
+  border-radius: var(--sl-radius);
+  padding: 0.6rem 0.8rem;
+  margin: 0;
+}
+
+/* Ingredient checklist */
+.ingredient-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.35rem;
+}
+
+.ingredient-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 0.875rem;
+  padding: 0.4rem 0.6rem;
+  border-radius: 8px;
+  border: 1px solid var(--sl-border);
+}
+
+.ingredient-have {
+  background: #f0fdf4;
+  border-color: #bbf7d0;
+}
+
+.ingredient-need {
+  background: #fff1f2;
+  border-color: #fecdd3;
+}
+
+.ingredient-staple {
+  background: var(--sl-bg);
+}
+
+.ingredient-note {
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--sl-text-muted);
+  white-space: nowrap;
+}
+
+.ingredient-have .ingredient-note {
+  color: #15803d;
+}
+
+.ingredient-need .ingredient-note {
+  color: #be123c;
+}
+
+.recipe-steps {
+  font-size: 0.9rem;
+  padding-left: 1.1rem;
+  margin: 0;
+}
+
+.recipe-steps li {
+  margin-bottom: 0.5rem;
+}
+
+.recipe-note {
+  font-size: 0.8125rem;
+  font-style: italic;
+  color: var(--sl-text-muted);
+  border-left: 3px solid var(--sl-border);
+  padding-left: 0.75rem;
+  margin: 1.25rem 0 0;
+}
+
+/* Tables shared by shopping list and meal prep */
+.recipe-table {
+  font-size: 0.875rem;
+  color: var(--sl-text);
+}
+
+.recipe-table thead th {
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--sl-text-muted);
+  border-bottom: 1px solid var(--sl-border);
+}
+
+.recipe-table tbody tr {
+  border-bottom: 1px solid var(--sl-border);
+}
+
+.recipe-table tbody tr:last-child {
+  border-bottom: none;
+}
+
+/* Meal-prep use-by pills mirror the pantry priority badges */
+.meal-prep-pill {
+  display: inline-block;
+  padding: 0.15rem 0.5rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.meal-prep-pill-good {
+  background: #dcfce7;
+  color: #15803d;
+}
+
+.meal-prep-pill-urgent {
+  background: #fef3c7;
+  color: #b45309;
+}
+
+.meal-prep-pill-expired {
+  background: #fee2e2;
+  color: #b91c1c;
 }
