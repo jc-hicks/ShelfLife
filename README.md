@@ -6,11 +6,31 @@ ShelfLife is a full-stack web application designed to help users reduce food was
 
 James Hicks and Alexandra Descoteaux
 
+## Class Link
+
+[Web Development — Online, Summer 2026 (Prof. John Guerra)](https://johnguerra.co/classes/webDevelopment_online_summer_2026/)
+
 ## Project Objective
 
 Help users track pantry items, monitor expiration dates, get recipe ideas from ingredients they already own, and keep meal-prepped food organized so less food is wasted.
 
-## Screenshot
+## Screenshots
+
+### Pantry dashboard — inventory
+
+![My Shelf inventory table, sorted by spoilage priority](public/assets/pantry-shelf.png)
+
+### Pantry dashboard — insights
+
+![Waste and savings insights charts](public/assets/pantry-insights.png)
+
+### Recipes — suggestions and details
+
+![Recipe suggestions with match meters and a recipe detail panel](public/assets/recipes.png)
+
+### Recipes — shopping list and meal prep
+
+![Smart shopping list and meal-prep tracker](public/assets/shopping-and-meal-prep.png)
 
 ## Instructions To Build
 

@@ -460,22 +460,6 @@ router.get("/ingredients", async (req, res) => {
   }
 });
 
-router.get("/recommendations", async (req, res) => {
-  try {
-    const recommendations = sortByRelevance(await loadFormattedRecipes())
-      .filter((recipe) => recipe.matchedIngredients.length > 0)
-      .slice(0, 6);
-
-    res.json(recommendations);
-  } catch (error) {
-    console.error(error);
-
-    res.status(500).json({
-      error: "Failed to fetch recipe recommendations",
-    });
-  }
-});
-
 router.get("/shopping-suggestions", async (req, res) => {
   try {
     // Only suggest buying for recipes you're close to making: a high
