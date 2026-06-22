@@ -1,26 +1,36 @@
-/* Pantry dashboard styles (index.html): the shelf table, the add-item panel,
-   and the insights charts. Builds on the shared tokens, navbar, buttons, and
-   form controls defined in main.css. */
+/* Pantry dashboard styles (index.html): the shelf table, insights charts,
+   and the add-item offcanvas. Builds on the shared tokens, navbar, buttons,
+   and form controls defined in main.css. */
 
 /* Panels */
-.my-shelf,
-.add-item,
-.my-recipes {
+.my-shelf {
   background-color: var(--sl-surface);
   border-radius: var(--sl-radius);
   border: 1px solid var(--sl-border);
   padding: 1.5rem;
-  min-height: 300px;
+  min-height: 400px;
   box-shadow: var(--sl-shadow);
 }
 
-.my-shelf {
-  min-height: 400px;
+/* Add item offcanvas */
+.add-item-offcanvas {
+  width: 380px;
 }
 
-.add-item,
-.my-recipes {
-  min-height: 250px;
+.add-item-offcanvas .offcanvas-header {
+  border-bottom: 1px solid var(--sl-border);
+  padding: 1.25rem 1.5rem;
+}
+
+.add-item-offcanvas .offcanvas-title {
+  font-size: 1rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--sl-text);
+}
+
+.add-item-offcanvas .offcanvas-body {
+  padding: 1.5rem;
 }
 
 /* Insights card */
@@ -65,9 +75,7 @@
 }
 
 /* Headings inside panels */
-.my-shelf h3,
-.add-item h2,
-.my-recipes h2 {
+.my-shelf h3 {
   font-size: 1rem;
   font-weight: 600;
   letter-spacing: -0.01em;
@@ -241,4 +249,105 @@
 
 .my-shelf .inline-cost-field {
   min-width: 6.5rem;
+}
+
+/* Meal prep panel */
+.meal-prep-panel {
+  background-color: var(--sl-surface);
+  border-radius: var(--sl-radius);
+  border: 1px solid var(--sl-border);
+  padding: 1.5rem;
+  box-shadow: var(--sl-shadow);
+}
+
+.meal-prep-panel h2 {
+  font-size: 1rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--sl-text);
+  margin-bottom: 0;
+}
+
+.meal-prep-panel .table {
+  font-size: 0.875rem;
+  color: var(--sl-text);
+}
+
+.meal-prep-panel .table thead th {
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--sl-text-muted);
+  border-bottom: 1px solid var(--sl-border);
+  padding-bottom: 0.6rem;
+}
+
+.meal-prep-panel .table tbody tr {
+  border-bottom: 1px solid var(--sl-border);
+}
+
+.meal-prep-panel .table tbody tr:last-child {
+  border-bottom: none;
+}
+
+.meal-prep-panel .table tbody td {
+  vertical-align: middle;
+  padding: 0.6rem 0.5rem;
+}
+
+.meal-prep-dashboard-table {
+  font-size: 0.875rem;
+  color: var(--sl-text);
+}
+
+/* Use-by pills (shared pattern with priority badges) */
+.meal-prep-pill {
+  display: inline-block;
+  padding: 0.15rem 0.5rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.meal-prep-pill-good {
+  background: #dcfce7;
+  color: #15803d;
+}
+
+.meal-prep-pill-urgent {
+  background: #fef3c7;
+  color: #b45309;
+}
+
+.meal-prep-pill-expired {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+
+/* Scrollable table + pagination — mirrors the recipe list layout */
+@media (min-width: 992px) {
+  .shelf-table-scroll {
+    max-height: 70vh;
+    overflow-y: auto;
+    padding: 2px 0.5rem 2px 2px;
+  }
+}
+
+.shelf-pagination {
+  display: flex;
+  justify-content: center;
+  margin-top: 1rem;
+}
+
+.shelf-pagination .page-link {
+  color: var(--sl-text);
+  cursor: pointer;
+}
+
+.shelf-pagination .page-item.active .page-link {
+  background-color: var(--sl-accent);
+  border-color: var(--sl-accent);
+  color: #ffffff;
 }

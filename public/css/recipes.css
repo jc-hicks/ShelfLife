@@ -47,6 +47,12 @@
   color: var(--sl-text-muted);
 }
 
+.recipe-cost-badge {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #15803d;
+}
+
 /* Filter toolbar */
 .recipe-filters {
   display: flex;

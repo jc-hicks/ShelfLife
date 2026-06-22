@@ -14,6 +14,8 @@ import {
 let editingItemId = null;
 let allShelfItems = [];
 let shelfSort = { column: null, direction: null };
+let shelfPage = 1;
+const SHELF_PAGE_SIZE = 25;
 
 const SORT_ARROW_NEUTRAL = "↕";
 const SORT_ARROW_ASC = "↑";
@@ -293,6 +295,7 @@ function toggleShelfSort(column) {
     shelfSort = { column: null, direction: null };
   }
 
+  shelfPage = 1;
   updateShelfSortIndicators();
   renderShelfTable();
 }
@@ -314,6 +317,66 @@ function getShelfSearchText(food) {
 function getShelfSearchTerm() {
   const searchInput = document.getElementById("shelf-search-input");
   return normalizeFilterText(searchInput?.value);
+}
+
+// Page numbers to show: first, last, and a window around the current page,
+// with "…" gaps where pages are skipped. Mirrors the recipe pagination logic.
+function shelfPageWindow(page, totalPages) {
+  const wanted = new Set([1, totalPages, page, page - 1, page + 1]);
+  const pages = [...wanted]
+    .filter((value) => value >= 1 && value <= totalPages)
+    .sort((a, b) => a - b);
+
+  const out = [];
+  let previous = 0;
+  for (const value of pages) {
+    if (value - previous > 1) {
+      out.push("…");
+    }
+    out.push(value);
+    previous = value;
+  }
+  return out;
+}
+
+function renderShelfPagination(page, totalPages) {
+  const paginationEl = document.getElementById("shelf-pagination");
+  if (!paginationEl) {
+    return;
+  }
+
+  if (totalPages <= 1) {
+    paginationEl.innerHTML = "";
+    return;
+  }
+
+  const pageItem = (label, target, { disabled = false, active = false }) => `
+    <li class="page-item${disabled ? " disabled" : ""}${active ? " active" : ""}">
+      <button
+        type="button"
+        class="page-link"
+        ${target === null ? "disabled" : `data-page="${target}"`}
+        ${disabled ? "disabled" : ""}
+        ${active ? 'aria-current="page"' : ""}
+      >${label}</button>
+    </li>
+  `;
+
+  const numbers = shelfPageWindow(page, totalPages)
+    .map((value) =>
+      value === "…"
+        ? pageItem("…", null, { disabled: true })
+        : pageItem(value, value, { active: value === page })
+    )
+    .join("");
+
+  paginationEl.innerHTML = `
+    <ul class="pagination pagination-sm mb-0">
+      ${pageItem("‹", page - 1, { disabled: page <= 1 })}
+      ${numbers}
+      ${pageItem("›", page + 1, { disabled: page >= totalPages })}
+    </ul>
+  `;
 }
 
 function updateShelfResultsNote(visibleCount, totalCount, searchTerm) {
@@ -360,12 +423,32 @@ function renderShelfTable() {
         </td>
       </tr>
     `;
+    renderShelfPagination(1, 1);
     return;
   }
 
-  tableBody.innerHTML = visibleShelf
-    .map((food, index) => renderShelfRow(food, index))
+  const totalPages = Math.ceil(visibleShelf.length / SHELF_PAGE_SIZE);
+
+  // If the item being edited falls on a different page, jump to it.
+  if (editingItemId) {
+    const editingIndex = visibleShelf.findIndex(
+      (food) => food._id === editingItemId
+    );
+    if (editingIndex !== -1) {
+      shelfPage = Math.floor(editingIndex / SHELF_PAGE_SIZE) + 1;
+    }
+  }
+
+  shelfPage = Math.max(1, Math.min(shelfPage, totalPages));
+
+  const start = (shelfPage - 1) * SHELF_PAGE_SIZE;
+  const pageItems = visibleShelf.slice(start, start + SHELF_PAGE_SIZE);
+
+  tableBody.innerHTML = pageItems
+    .map((food, index) => renderShelfRow(food, start + index))
     .join("");
+
+  renderShelfPagination(shelfPage, totalPages);
 }
 
 function clearShelfSearch() {
@@ -374,6 +457,7 @@ function clearShelfSearch() {
     searchInput.value = "";
   }
 
+  shelfPage = 1;
   renderShelfTable();
 }
 
@@ -384,6 +468,7 @@ function clearShelfFilters() {
   }
 
   shelfSort = { column: null, direction: null };
+  shelfPage = 1;
   updateShelfSortIndicators();
   renderShelfTable();
 }
@@ -576,6 +661,76 @@ async function loadShelfData() {
   }
 }
 
+function renderMealPrepUseBy(expirationDate) {
+  const days = getDaysUntilExpiration(expirationDate);
+  if (days === null) {
+    return `<span class="text-muted">${escapeHtml(expirationDate || "—")}</span>`;
+  }
+
+  let label = `${days} day${days === 1 ? "" : "s"}`;
+  let variant = "good";
+  if (days < 0) {
+    label = "Expired";
+    variant = "expired";
+  } else if (days === 0) {
+    label = "Today";
+    variant = "urgent";
+  } else if (days <= 2) {
+    variant = "urgent";
+  }
+
+  return `<span class="meal-prep-pill meal-prep-pill-${variant}">${label}</span>`;
+}
+
+async function loadMealPrepSection() {
+  const container = document.getElementById("meal-prep-dashboard-body");
+  if (!container) {
+    return;
+  }
+
+  try {
+    const response = await fetch("/api/recipes/meal-prep");
+    const items = await response.json();
+
+    if (!items.length) {
+      container.innerHTML =
+        '<p class="text-muted small mb-0">No meal-prepped food tracked yet. Add some on the <a href="/recipes.html">Recipes page</a>.</p>';
+      return;
+    }
+
+    container.innerHTML = `
+      <div class="table-responsive">
+        <table class="table meal-prep-dashboard-table mb-0">
+          <thead>
+            <tr>
+              <th>Meal</th>
+              <th>Prepared</th>
+              <th>Use by</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${items
+              .map(
+                (item) => `
+              <tr>
+                <td>${escapeHtml(item.name)}</td>
+                <td class="text-muted">${escapeHtml(item.preparedDate || "—")}</td>
+                <td>${renderMealPrepUseBy(item.expirationDate)}</td>
+              </tr>
+            `
+              )
+              .join("")}
+          </tbody>
+        </table>
+      </div>
+    `;
+  } catch (error) {
+    console.error("Failed to load meal prep section:", error);
+    container.innerHTML =
+      '<p class="text-danger small mb-0">Could not load meal prep items.</p>';
+  }
+}
+
 const addItemForm = document.getElementById("add-item-form");
 const quantityUnitInput = document.getElementById("quantity-unit-input");
 const categoryInput = document.getElementById("category-input");
@@ -586,12 +741,30 @@ const shelfClearFiltersBtn = document.getElementById("shelf-clear-filters-btn");
 quantityUnitInput.innerHTML = renderQuantityUnitOptions();
 categoryInput.innerHTML = renderCategoryOptions();
 
-shelfSearchInput.addEventListener("input", renderShelfTable);
+shelfSearchInput.addEventListener("input", () => {
+  shelfPage = 1;
+  renderShelfTable();
+});
 document.querySelectorAll(".shelf-sort-btn").forEach((btn) => {
   btn.addEventListener("click", () => toggleShelfSort(btn.dataset.sort));
 });
 shelfClearSearchBtn.addEventListener("click", clearShelfSearch);
 shelfClearFiltersBtn.addEventListener("click", clearShelfFilters);
+
+document
+  .getElementById("shelf-pagination")
+  .addEventListener("click", (event) => {
+    const button = event.target.closest("button[data-page]");
+    if (!button) {
+      return;
+    }
+    const page = Number(button.dataset.page);
+    if (page && page !== shelfPage) {
+      shelfPage = page;
+      renderShelfTable();
+      document.querySelector(".shelf-table-scroll").scrollTop = 0;
+    }
+  });
 
 document.addEventListener("click", async (event) => {
   if (event.target.classList.contains("edit-btn")) {
@@ -687,6 +860,8 @@ addItemForm.addEventListener("submit", async (event) => {
     addItemForm.reset();
     quantityUnitInput.value = DEFAULT_QUANTITY_UNIT;
     categoryInput.value = FOOD_CATEGORIES[0];
+    const offcanvasEl = document.getElementById("add-item-offcanvas");
+    bootstrap.Offcanvas.getInstance(offcanvasEl)?.hide();
     await loadShelfData();
   } catch (error) {
     console.error("Failed to submit form:", error);
@@ -694,5 +869,6 @@ addItemForm.addEventListener("submit", async (event) => {
 });
 
 loadShelfData();
+loadMealPrepSection();
 refreshSavingsChart();
 refreshWasteMap();

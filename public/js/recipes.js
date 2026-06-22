@@ -79,6 +79,14 @@ function buildDetailMetaParts(recipe) {
   if (typeof recipe.mealPrepFriendly === "boolean") {
     parts.push(recipe.mealPrepFriendly ? "Great for meal prep" : "Best fresh");
   }
+  if (recipe.costPerServing !== null && recipe.costPerServing !== undefined) {
+    parts.push(`~$${recipe.costPerServing.toFixed(2)}/serving`);
+  } else if (
+    recipe.estimatedCost !== null &&
+    recipe.estimatedCost !== undefined
+  ) {
+    parts.push(`~$${recipe.estimatedCost.toFixed(2)} estimated`);
+  }
 
   return parts;
 }
@@ -121,8 +129,19 @@ function renderMatchMeter(recipe) {
   `;
 }
 
+function renderCostBadge(recipe) {
+  if (recipe.costPerServing !== null && recipe.costPerServing !== undefined) {
+    return `<span class="recipe-cost-badge">~$${recipe.costPerServing.toFixed(2)}/serving</span>`;
+  }
+  if (recipe.estimatedCost !== null && recipe.estimatedCost !== undefined) {
+    return `<span class="recipe-cost-badge">~$${recipe.estimatedCost.toFixed(2)} total</span>`;
+  }
+  return "";
+}
+
 function renderRecipeCard(recipe) {
   const isActive = recipe.id === selectedRecipeId;
+  const costBadge = renderCostBadge(recipe);
 
   return `
     <article
@@ -135,8 +154,10 @@ function renderRecipeCard(recipe) {
       </div>
       ${
         buildMetaParts(recipe).length
-          ? `<p class="recipe-meta">${buildMetaParts(recipe).join(" · ")}</p>`
-          : ""
+          ? `<p class="recipe-meta">${buildMetaParts(recipe).join(" · ")}${costBadge ? ` · ${costBadge}` : ""}</p>`
+          : costBadge
+            ? `<p class="recipe-meta">${costBadge}</p>`
+            : ""
       }
       ${renderTagChips(recipe.tags)}
       <p class="recipe-reason">${escapeHtml(recipe.reason)}</p>

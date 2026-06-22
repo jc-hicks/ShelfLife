@@ -84,7 +84,18 @@
         <div class="row">
           <div class="col-12">
             <div class="my-shelf">
-              <h3>My Shelf</h3>
+              <div class="d-flex justify-content-between align-items-center mb-1">
+                <h3 class="mb-0">My Shelf</h3>
+                <button
+                  type="button"
+                  class="btn btn-primary btn-sm"
+                  data-bs-toggle="offcanvas"
+                  data-bs-target="#add-item-offcanvas"
+                  aria-controls="add-item-offcanvas"
+                >
+                  + Add Item
+                </button>
+              </div>
               <p class="shelf-priority-note text-muted mb-3">
                 Use items at the top first.
               </p>
@@ -129,7 +140,7 @@
                 aria-live="polite"
               ></p>
 
-              <div class="table-responsive">
+              <div class="table-responsive shelf-table-scroll">
                 <table class="table" id="shelf-table">
                   <thead>
                     <tr>
@@ -234,108 +245,147 @@
                   </tbody>
                 </table>
               </div>
+
+              <nav
+                id="shelf-pagination"
+                class="shelf-pagination"
+                aria-label="Shelf pages"
+              ></nav>
             </div>
           </div>
         </div>
 
-        <!-- Bottom Two Panels -->
+        <!-- Meal Prep Section -->
         <div class="row mt-4">
-          <div class="col-md-12">
-            <div class="add-item">
-              <h2>Add to your Shelf:</h2>
-              <form id="add-item-form">
-                <div class="mb-3">
-                  <label for="shelf-item-input" class="form-label">
-                    Food or Meal
-                  </label>
-                  <input
-                    type="text"
-                    class="form-control"
-                    id="shelf-item-input"
-                    name="food"
-                  />
-                </div>
-
-                <div class="mb-3">
-                  <label for="category-input" class="form-label"
-                    >Category</label
-                  >
-                  <select
-                    class="form-select"
-                    id="category-input"
-                    name="category"
-                  ></select>
-                </div>
-
-                <div class="mb-3">
-                  <label for="store-date-input" class="form-label">
-                    Stored On
-                  </label>
-                  <input
-                    type="date"
-                    class="form-control"
-                    id="store-date-input"
-                    name="storedDate"
-                  />
-                </div>
-
-                <div class="mb-3">
-                  <label for="expiration-date-input" class="form-label">
-                    Expiration Date
-                  </label>
-                  <input
-                    type="date"
-                    class="form-control"
-                    id="expiration-date-input"
-                    name="expirationDate"
-                  />
-                </div>
-
-                <div class="mb-3">
-                  <label for="quantity-input" class="form-label"
-                    >Quantity</label
-                  >
-                  <div class="input-group">
-                    <input
-                      type="number"
-                      class="form-control"
-                      id="quantity-input"
-                      name="quantity"
-                      min="0"
-                      step="any"
-                      placeholder="Amount"
-                    />
-                    <select
-                      class="form-select"
-                      id="quantity-unit-input"
-                      name="quantityUnit"
-                    ></select>
-                  </div>
-                </div>
-
-                <div class="mb-3">
-                  <label for="cost-input" class="form-label">Cost</label>
-                  <div class="input-group">
-                    <span class="input-group-text">$</span>
-                    <input
-                      type="number"
-                      class="form-control"
-                      id="cost-input"
-                      name="cost"
-                      min="0"
-                      step="0.01"
-                      placeholder="0.00"
-                    />
-                  </div>
-                </div>
-
-                <button type="submit" class="btn btn-primary">Add Item</button>
-              </form>
+          <div class="col-12">
+            <div class="meal-prep-panel mb-4">
+              <div
+                class="d-flex justify-content-between align-items-center mb-1"
+              >
+                <h2>Meal Prep</h2>
+                <a
+                  href="/recipes.html"
+                  class="btn btn-outline-secondary btn-sm"
+                >
+                  Manage on Recipes page →
+                </a>
+              </div>
+              <p class="text-muted small mb-3">
+                Batch-cooked food in your fridge — eat before it turns.
+              </p>
+              <div id="meal-prep-dashboard-body">
+                <p class="text-muted small">Loading…</p>
+              </div>
             </div>
           </div>
         </div>
+
       </div>
     </main>
+
+    <!-- Add Item offcanvas -->
+    <div
+      class="offcanvas offcanvas-end add-item-offcanvas"
+      tabindex="-1"
+      id="add-item-offcanvas"
+      aria-labelledby="add-item-offcanvas-label"
+    >
+      <div class="offcanvas-header">
+        <h2 class="offcanvas-title" id="add-item-offcanvas-label">
+          Add to your Shelf
+        </h2>
+        <button
+          type="button"
+          class="btn-close"
+          data-bs-dismiss="offcanvas"
+          aria-label="Close"
+        ></button>
+      </div>
+      <div class="offcanvas-body">
+        <form id="add-item-form">
+          <div class="mb-3">
+            <label for="shelf-item-input" class="form-label">Food or Meal</label>
+            <input
+              type="text"
+              class="form-control"
+              id="shelf-item-input"
+              name="food"
+              autocomplete="off"
+            />
+          </div>
+
+          <div class="mb-3">
+            <label for="category-input" class="form-label">Category</label>
+            <select
+              class="form-select"
+              id="category-input"
+              name="category"
+            ></select>
+          </div>
+
+          <div class="row g-3 mb-3">
+            <div class="col-6">
+              <label for="store-date-input" class="form-label">Stored On</label>
+              <input
+                type="date"
+                class="form-control"
+                id="store-date-input"
+                name="storedDate"
+              />
+            </div>
+            <div class="col-6">
+              <label for="expiration-date-input" class="form-label">
+                Expires On
+              </label>
+              <input
+                type="date"
+                class="form-control"
+                id="expiration-date-input"
+                name="expirationDate"
+              />
+            </div>
+          </div>
+
+          <div class="mb-3">
+            <label for="quantity-input" class="form-label">Quantity</label>
+            <div class="input-group">
+              <input
+                type="number"
+                class="form-control"
+                id="quantity-input"
+                name="quantity"
+                min="0"
+                step="any"
+                placeholder="Amount"
+              />
+              <select
+                class="form-select"
+                id="quantity-unit-input"
+                name="quantityUnit"
+              ></select>
+            </div>
+          </div>
+
+          <div class="mb-4">
+            <label for="cost-input" class="form-label">Cost</label>
+            <div class="input-group">
+              <span class="input-group-text">$</span>
+              <input
+                type="number"
+                class="form-control"
+                id="cost-input"
+                name="cost"
+                min="0"
+                step="0.01"
+                placeholder="0.00"
+              />
+            </div>
+          </div>
+
+          <button type="submit" class="btn btn-primary w-100">Add Item</button>
+        </form>
+      </div>
+    </div>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
     <script type="module" src="js/dashboard.js"></script>
   </body>

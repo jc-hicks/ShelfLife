@@ -151,6 +151,167 @@ function getCostLostPerDay(shelfItem) {
   return value / daysLeft;
 }
 
+// ---------- Cost-to-cook estimation ----------------------------------------
+
+// Conversion tables to a common base unit.
+// Volume → millilitres, Weight → grams.
+const ML_PER = {
+  tsp: 4.93,
+  teaspoon: 4.93,
+  teaspoons: 4.93,
+  tbsp: 14.79,
+  tablespoon: 14.79,
+  tablespoons: 14.79,
+  cup: 236.6,
+  cups: 236.6,
+  "fl oz": 29.57,
+  floz: 29.57,
+  ml: 1,
+  milliliter: 1,
+  millilitre: 1,
+  milliliters: 1,
+  millilitres: 1,
+  l: 1000,
+  liter: 1000,
+  litre: 1000,
+  liters: 1000,
+  litres: 1000,
+  pint: 473.2,
+  pints: 473.2,
+  quart: 946.4,
+  quarts: 946.4,
+  gallon: 3785,
+  gallons: 3785,
+};
+
+const G_PER = {
+  g: 1,
+  gram: 1,
+  grams: 1,
+  kg: 1000,
+  kilogram: 1000,
+  kilograms: 1000,
+  oz: 28.35,
+  ounce: 28.35,
+  ounces: 28.35,
+  lb: 453.6,
+  pound: 453.6,
+  pounds: 453.6,
+};
+
+// Parse a free-text measure string (e.g. "1/2 cup", "3", "2 tbsp", "800g")
+// into { quantity: number, unit: string } or null if unparseable.
+function parseMeasure(raw) {
+  if (!raw) {
+    return null;
+  }
+
+  const str = String(raw).trim().toLowerCase();
+
+  // Collapse multiple spaces, normalise common abbreviations
+  const normalised = str
+    .replace(/\s+/g, " ")
+    .replace(/tablespoons?/, "tbsp")
+    .replace(/teaspoons?/, "tsp");
+
+  // Match optional mixed number + fraction then optional unit
+  // e.g. "1 1/2 cup", "3/4 tsp", "100g", "2", "800 g"
+  const match = normalised.match(/^(\d+)?\s*(\d+\/\d+)?\s*([a-z\s]+)?$/);
+  if (!match) {
+    return null;
+  }
+
+  const whole = match[1] ? Number(match[1]) : 0;
+  let fraction = 0;
+  if (match[2]) {
+    const [num, den] = match[2].split("/").map(Number);
+    fraction = num / den;
+  }
+
+  const quantity = whole + fraction;
+  if (!quantity) {
+    return null;
+  }
+
+  const unit = (match[3] || "").trim();
+  return { quantity, unit };
+}
+
+// Convert a parsed measure to a base unit (ml for volume, g for weight,
+// empty string for counts). Returns null if the unit is unrecognised.
+function toBase(parsed) {
+  if (!parsed) {
+    return null;
+  }
+
+  const { quantity, unit } = parsed;
+  const u = unit.replace(/\s+/g, "").toLowerCase();
+
+  if (ML_PER[u] !== undefined || ML_PER[unit] !== undefined) {
+    return { value: quantity * (ML_PER[u] ?? ML_PER[unit]), type: "volume" };
+  }
+
+  if (G_PER[u] !== undefined || G_PER[unit] !== undefined) {
+    return { value: quantity * (G_PER[u] ?? G_PER[unit]), type: "weight" };
+  }
+
+  // Treat empty unit or count-style words as items
+  const COUNT_UNITS = new Set([
+    "",
+    "item",
+    "items",
+    "piece",
+    "pieces",
+    "slice",
+    "slices",
+    "clove",
+    "cloves",
+    "fillet",
+    "fillets",
+    "head",
+    "heads",
+    "bunch",
+    "bunches",
+    "stalk",
+    "stalks",
+    "ear",
+    "ears",
+    "sprig",
+    "sprigs",
+  ]);
+  if (COUNT_UNITS.has(u) || /^\d+$/.test(u)) {
+    return { value: quantity, type: "count" };
+  }
+
+  return null;
+}
+
+// Estimate the cost of one ingredient for a single recipe use.
+// Returns a number or null when the units are incompatible or missing.
+function estimateIngredientCost(recipeIndex, recipe, shelfItem) {
+  const measureStr = (recipe.measures || [])[recipeIndex];
+  if (!measureStr || !shelfItem.cost || !shelfItem.quantity) {
+    return null;
+  }
+
+  const recipeBase = toBase(parseMeasure(measureStr));
+  const shelfBase = toBase({
+    quantity: shelfItem.quantity,
+    unit: shelfItem.quantityUnit || "",
+  });
+
+  if (!recipeBase || !shelfBase) {
+    return null;
+  }
+
+  if (recipeBase.type !== shelfBase.type || shelfBase.value === 0) {
+    return null;
+  }
+
+  const fraction = recipeBase.value / shelfBase.value;
+  return Math.round(Number(shelfItem.cost) * fraction * 100) / 100;
+}
+
 // Pair each non-staple ingredient with the shelf item that satisfies it (if
 // any), then derive the matched / expiring / missing breakdown and a score
 // that rewards using what you own and, especially, what's about to expire.
@@ -168,8 +329,11 @@ function formatRecipe(recipe, shelfItems) {
   // rescue expensive, about-to-spoil items rank highest.
   let expiringPriority = 0;
   let valueAtRisk = 0;
+  let estimatedCost = 0;
+  let costCalculable = false;
 
   for (const ingredient of considered) {
+    const ingredientIndex = recipe.ingredients.indexOf(ingredient);
     const shelfMatch = shelfItems.find((item) =>
       namesMatch(ingredient, item.name)
     );
@@ -180,6 +344,17 @@ function formatRecipe(recipe, shelfItems) {
     }
 
     matchedIngredients.push(ingredient);
+
+    const ingredientCost = estimateIngredientCost(
+      ingredientIndex,
+      recipe,
+      shelfMatch
+    );
+    if (ingredientCost !== null) {
+      estimatedCost += ingredientCost;
+      costCalculable = true;
+    }
+
     if (isExpiringSoon(shelfMatch.expirationDate)) {
       expiringIngredients.push(ingredient);
       expiringPriority += getCostLostPerDay(shelfMatch);
@@ -215,6 +390,12 @@ function formatRecipe(recipe, shelfItems) {
     reason = "A fresh idea for your next shopping trip.";
   }
 
+  estimatedCost = Math.round(estimatedCost * 100) / 100;
+  const costPerServing =
+    costCalculable && recipe.servings
+      ? Math.round((estimatedCost / recipe.servings) * 100) / 100
+      : null;
+
   return {
     ...recipe,
     matchedIngredients,
@@ -226,6 +407,8 @@ function formatRecipe(recipe, shelfItems) {
     valueAtRisk,
     score,
     reason,
+    estimatedCost: costCalculable ? estimatedCost : null,
+    costPerServing,
   };
 }
 
@@ -257,6 +440,8 @@ function toCard(recipe) {
     canMakeNow: recipe.canMakeNow,
     valueAtRisk: recipe.valueAtRisk,
     expiringIngredients: recipe.expiringIngredients,
+    estimatedCost: recipe.estimatedCost ?? null,
+    costPerServing: recipe.costPerServing ?? null,
   };
 }
 

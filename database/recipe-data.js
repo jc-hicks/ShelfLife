@@ -3,6 +3,7 @@
 // shelf items a user is likely to have, rather than brand- or cut-specific
 // names. Matching against the shelf is handled in routes/recipes.js.
 //
+// `measures` is a parallel array to `ingredients` — same index = same item.
 // Tags drive the filter chips on the recipe page, so keep them consistent
 // across recipes (reuse an existing tag before inventing a new one).
 
@@ -23,6 +24,7 @@ export const recipeCatalog = [
       "Salt",
       "Pepper",
     ],
+    measures: ["3", "1 cup", "1/4 cup", "1 tsp", "", ""],
     instructions: [
       "Beat three eggs with a pinch of salt and pepper.",
       "Melt a little butter over medium heat and wilt the spinach for a minute.",
@@ -51,6 +53,7 @@ export const recipeCatalog = [
       "Salt",
       "Pepper",
     ],
+    measures: ["1 cup", "8", "1 cup", "1 cup", "6 slices", "2", "", ""],
     instructions: [
       "Heat the oven to 375°F and butter a baking dish.",
       "Tear the bread into chunks and spread them across the dish with the diced ham.",
@@ -79,6 +82,16 @@ export const recipeCatalog = [
       "Salt",
       "Pepper",
     ],
+    measures: [
+      "8 oz",
+      "3 cups",
+      "1/2 cup",
+      "1/2 cup",
+      "2 cloves",
+      "2 tbsp",
+      "",
+      "",
+    ],
     instructions: [
       "Boil the spaghetti until just shy of al dente, saving a mug of the pasta water.",
       "Soften the garlic in olive oil, then add the spinach and let it collapse.",
@@ -104,6 +117,7 @@ export const recipeCatalog = [
       "Onion",
       "Olive oil",
     ],
+    measures: ["1 cup", "2 cups", "6", "1/2 cup", "1/4 cup", "1/2", "1 tbsp"],
     instructions: [
       "Heat the oven to 375°F.",
       "Cook the onion and ham in an oven-safe skillet until the onion turns soft.",
@@ -121,6 +135,7 @@ export const recipeCatalog = [
     difficulty: "Easy",
     tags: ["Breakfast", "High-protein", "Quick"],
     ingredients: ["Eggs", "Milk", "Ham", "Spinach", "Cheddar cheese", "Bread"],
+    measures: ["4", "2 tbsp", "1/2 cup", "1 cup", "1/4 cup", "2 slices"],
     instructions: [
       "Whisk the eggs with a splash of milk.",
       "Cook the ham and spinach in a skillet for a minute, then pour in the eggs.",
@@ -137,6 +152,7 @@ export const recipeCatalog = [
     difficulty: "Easy",
     tags: ["Breakfast", "Vegetarian", "Kid-friendly"],
     ingredients: ["Bananas", "Eggs", "Oats", "Milk", "Butter"],
+    measures: ["2", "2", "1 cup", "1/4 cup", "1 tbsp"],
     instructions: [
       "Mash two ripe bananas and beat in the eggs.",
       "Stir in oats and enough milk to make a thick, spoonable batter, then rest it five minutes.",
@@ -155,6 +171,7 @@ export const recipeCatalog = [
     difficulty: "Easy",
     tags: ["Breakfast", "Vegetarian", "No-cook", "Quick"],
     ingredients: ["Bananas", "Greek yogurt", "Milk", "Frozen blueberries"],
+    measures: ["2", "1 cup", "1/2 cup", "1 cup"],
     instructions: [
       "Drop the bananas, yogurt, and a handful of frozen blueberries into a blender.",
       "Pour in milk until it reaches the blade and blend until smooth.",
@@ -179,6 +196,7 @@ export const recipeCatalog = [
       "Salt",
       "Pepper",
     ],
+    measures: ["2 fillets", "2 tbsp", "3 cloves", "1", "2 cups", "", ""],
     instructions: [
       "Pat the salmon dry and season both sides with salt and pepper.",
       "Sear it skin-side down in a little butter until the skin crisps, then flip.",
@@ -207,6 +225,7 @@ export const recipeCatalog = [
       "Salt",
       "Pepper",
     ],
+    measures: ["1 lb", "2", "2", "1", "3 tbsp", "3 cloves", "", ""],
     instructions: [
       "Heat the oven to 425°F.",
       "Cut the chicken and vegetables into similar-sized pieces and spread them on a sheet pan.",
@@ -234,6 +253,16 @@ export const recipeCatalog = [
       "Soy sauce",
       "Green onion",
     ],
+    measures: [
+      "2 cups",
+      "1/2 lb",
+      "2",
+      "1/2 cup",
+      "1",
+      "2 cloves",
+      "3 tbsp",
+      "3",
+    ],
     instructions: [
       "Use day-old cold rice if you have it — fresh rice turns gummy.",
       "Scramble the eggs in a hot, oiled pan and set them aside.",
@@ -257,6 +286,7 @@ export const recipeCatalog = [
       "Bell peppers",
       "Onion",
     ],
+    measures: ["4", "1 cup", "1/2 cup", "1", "1/4"],
     instructions: [
       "Mash the black beans lightly with a fork and stir in diced peppers and onion.",
       "Spread the mixture over half a tortilla, top with cheddar, and fold it over.",
@@ -282,6 +312,7 @@ export const recipeCatalog = [
       "Olive oil",
       "Salt",
     ],
+    measures: ["2 cups", "1", "3 cloves", "2", "1", "2 tbsp", ""],
     instructions: [
       "Soften the onion, carrots, and peppers in olive oil with a pinch of salt.",
       "Stir in the garlic, then add the black beans and enough water to cover.",
@@ -301,6 +332,7 @@ export const recipeCatalog = [
     difficulty: "Easy",
     tags: ["Dinner", "Vegetarian", "Pasta", "Quick"],
     ingredients: ["Spaghetti", "Garlic", "Olive oil", "Salt", "Pepper"],
+    measures: ["8 oz", "4 cloves", "1/4 cup", "", ""],
     instructions: [
       "Boil the spaghetti in well-salted water until al dente.",
       "Meanwhile, gently warm thinly sliced garlic in plenty of olive oil until just golden.",
@@ -327,6 +359,7 @@ export const recipeCatalog = [
       "Olive oil",
       "Salt",
     ],
+    measures: ["8 oz", "4", "3 cloves", "1", "3 tbsp", ""],
     instructions: [
       "Cook the onion and garlic slowly in olive oil until sweet and soft.",
       "Add chopped tomatoes and a pinch of salt and simmer until they break down into sauce.",
@@ -351,6 +384,7 @@ export const recipeCatalog = [
       "Salt",
       "Pepper",
     ],
+    measures: ["6", "1 cup", "1", "1/2 cup", "1/4", "", ""],
     instructions: [
       "Heat the oven to 350°F and grease a muffin tin.",
       "Divide the chopped spinach, peppers, and onion between the cups.",
@@ -378,6 +412,7 @@ export const recipeCatalog = [
       "Salt",
       "Pepper",
     ],
+    measures: ["1/2 lb", "3", "1", "2 cloves", "4 oz", "", ""],
     instructions: [
       "Simmer the chicken in salted water with the onion and garlic until cooked, then lift it out and shred.",
       "Add the sliced carrots to the broth and cook until tender.",
@@ -395,6 +430,7 @@ export const recipeCatalog = [
     difficulty: "Easy",
     tags: ["Breakfast", "Vegetarian", "Quick"],
     ingredients: ["Bread", "Avocado", "Eggs", "Lemon", "Salt", "Pepper"],
+    measures: ["1 slice", "1", "1", "1/4", "", ""],
     instructions: [
       "Toast the bread and fry or poach an egg however you like it.",
       "Mash the avocado with a squeeze of lemon, salt, and pepper.",
@@ -418,6 +454,7 @@ export const recipeCatalog = [
       "Soy sauce",
       "Green onion",
     ],
+    measures: ["2 fillets", "1 cup", "1", "1", "2 tbsp", "2"],
     instructions: [
       "Cook the rice and keep it warm.",
       "Roast or pan-sear the salmon and break it into large flakes.",
@@ -435,6 +472,7 @@ export const recipeCatalog = [
     difficulty: "Easy",
     tags: ["Breakfast", "High-protein", "Quick"],
     ingredients: ["Bagels", "Eggs", "Cheddar cheese", "Butter", "Ham"],
+    measures: ["1", "1", "1 oz", "1 tsp", "2 slices"],
     instructions: [
       "Split and toast the bagel, then butter both halves.",
       "Fry an egg, breaking the yolk if you want it tidy, and warm the ham beside it.",
@@ -451,6 +489,7 @@ export const recipeCatalog = [
     difficulty: "Easy",
     tags: ["Lunch", "Vegetarian", "Soup", "Meal prep"],
     ingredients: ["Carrots", "Onion", "Garlic", "Butter", "Milk", "Salt"],
+    measures: ["6", "1", "2 cloves", "2 tbsp", "1/2 cup", ""],
     instructions: [
       "Sweat the onion and garlic in butter until soft.",
       "Add the sliced carrots and enough water to cover, then simmer until very tender.",
@@ -475,6 +514,7 @@ export const recipeCatalog = [
       "Tomatoes",
       "Garlic",
     ],
+    measures: ["4", "1 cup", "1 cup", "1 cup", "1", "2", "2 cloves"],
     instructions: [
       "Heat the oven to 375°F and halve the peppers, removing the seeds.",
       "Cook the onion, garlic, and tomatoes, then stir in cooked rice and black beans.",
@@ -492,6 +532,7 @@ export const recipeCatalog = [
     difficulty: "Easy",
     tags: ["Breakfast", "Vegetarian", "Kid-friendly"],
     ingredients: ["Bread", "Eggs", "Milk", "Butter", "Bananas"],
+    measures: ["6 slices", "3", "1/2 cup", "2 tbsp", "2"],
     instructions: [
       "Whisk the eggs with milk in a shallow dish.",
       "Soak each slice of bread for a few seconds a side — sturdy or slightly stale bread holds up best.",
@@ -509,6 +550,7 @@ export const recipeCatalog = [
     difficulty: "Easy",
     tags: ["Breakfast", "Vegetarian", "No-cook", "Quick"],
     ingredients: ["Greek yogurt", "Bananas", "Frozen blueberries", "Oats"],
+    measures: ["1 cup", "1", "1/2 cup", "1/4 cup"],
     instructions: [
       "Layer yogurt, sliced banana, and thawed blueberries in a glass or jar.",
       "Sprinkle oats between the layers for some crunch.",
@@ -531,6 +573,7 @@ export const recipeCatalog = [
       "Bell peppers",
       "Onion",
     ],
+    measures: ["4", "1/2 lb", "1/2 cup", "1", "1/4"],
     instructions: [
       "Cook the sliced chicken with the peppers and onion until everything is tender.",
       "Lay the filling and cheddar over half a tortilla and fold it closed.",
@@ -555,6 +598,7 @@ export const recipeCatalog = [
       "Soy sauce",
       "Rice",
     ],
+    measures: ["2", "2", "1 cup", "1", "2 cloves", "3 tbsp", "1 1/2 cups"],
     instructions: [
       "Get a wide pan very hot and add a little oil.",
       "Stir-fry the firmer vegetables first — carrots and peppers — then the onion.",
@@ -572,6 +616,7 @@ export const recipeCatalog = [
     difficulty: "Easy",
     tags: ["Lunch", "Vegetarian", "Quick", "Kid-friendly"],
     ingredients: ["Bread", "Cheddar cheese", "Tomatoes", "Butter"],
+    measures: ["2 slices", "2 oz", "1", "1 tbsp"],
     instructions: [
       "Butter the outsides of two slices of bread.",
       "Layer cheddar and thin tomato slices between them, butter-side out.",
@@ -588,6 +633,7 @@ export const recipeCatalog = [
     difficulty: "Easy",
     tags: ["Lunch", "Soup", "Quick", "High-protein"],
     ingredients: ["Eggs", "Green onion", "Garlic", "Soy sauce", "Frozen peas"],
+    measures: ["2", "2", "1 clove", "1 tbsp", "1/2 cup"],
     instructions: [
       "Bring a pot of water to a gentle simmer with the garlic and a little soy sauce.",
       "Beat the eggs, then pour them in a thin stream while stirring so they form ribbons.",
@@ -611,6 +657,7 @@ export const recipeCatalog = [
       "Butter",
       "Greek yogurt",
     ],
+    measures: ["4", "1 cup", "1 cup", "2", "2 tbsp", "1/2 cup"],
     instructions: [
       "Heat the oven to 400°F, prick the potatoes, and bake until tender, about 50 minutes.",
       "Warm the black beans while the potatoes finish.",

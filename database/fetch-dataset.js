@@ -52,6 +52,7 @@ function splitInstructions(text) {
 function collectIngredients(meal) {
   const seen = new Set();
   const ingredients = [];
+  const measures = [];
 
   for (let i = 1; i <= 20; i += 1) {
     const name = (meal[`strIngredient${i}`] || "").trim();
@@ -62,10 +63,11 @@ function collectIngredients(meal) {
     if (!seen.has(key)) {
       seen.add(key);
       ingredients.push(name);
+      measures.push((meal[`strMeasure${i}`] || "").trim());
     }
   }
 
-  return ingredients;
+  return { ingredients, measures };
 }
 
 function collectTags(meal) {
@@ -89,10 +91,12 @@ function collectTags(meal) {
 }
 
 function toRecipe(meal) {
+  const { ingredients, measures } = collectIngredients(meal);
   return {
     id: `${slugify(meal.strMeal)}-${meal.idMeal}`,
     name: meal.strMeal,
-    ingredients: collectIngredients(meal),
+    ingredients,
+    measures,
     instructions: splitInstructions(meal.strInstructions),
     tags: collectTags(meal),
     image: meal.strMealThumb || null,
