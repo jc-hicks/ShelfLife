@@ -61,6 +61,7 @@
                   <button
                     type="button"
                     class="btn btn-primary btn-sm"
+                    id="add-recipe-trigger"
                     data-bs-toggle="modal"
                     data-bs-target="#add-recipe-modal"
                   >
@@ -176,7 +177,7 @@
 
               <form id="meal-prep-form" class="mb-4">
                 <div class="row g-3">
-                  <div class="col-md-4">
+                  <div class="col-md-6">
                     <label for="meal-prep-name" class="form-label">Meal</label>
                     <input
                       id="meal-prep-name"
@@ -186,7 +187,27 @@
                       required
                     />
                   </div>
-                  <div class="col-md-3">
+                  <div class="col-md-6">
+                    <label for="meal-prep-quantity" class="form-label">
+                      Quantity
+                    </label>
+                    <div class="input-group">
+                      <input
+                        id="meal-prep-quantity"
+                        class="form-control"
+                        type="number"
+                        min="0"
+                        step="any"
+                        placeholder="Amount"
+                      />
+                      <select
+                        class="form-select"
+                        id="meal-prep-unit"
+                        aria-label="Quantity unit"
+                      ></select>
+                    </div>
+                  </div>
+                  <div class="col-md-4">
                     <label for="meal-prep-date" class="form-label">
                       Prepared
                     </label>
@@ -197,7 +218,7 @@
                       required
                     />
                   </div>
-                  <div class="col-md-3">
+                  <div class="col-md-4">
                     <label for="meal-prep-expiration" class="form-label">
                       Use by
                     </label>
@@ -208,7 +229,7 @@
                       required
                     />
                   </div>
-                  <div class="col-md-2 d-flex align-items-end">
+                  <div class="col-md-4 d-flex align-items-end">
                     <button type="submit" class="btn btn-primary w-100">
                       Add
                     </button>
@@ -228,6 +249,7 @@
                 <thead>
                   <tr>
                     <th>Meal</th>
+                    <th>Qty</th>
                     <th>Prepared</th>
                     <th>Use by</th>
                     <th class="text-end">Action</th>
@@ -235,7 +257,7 @@
                 </thead>
                 <tbody id="meal-prep-table">
                   <tr>
-                    <td colspan="4" class="text-muted">
+                    <td colspan="5" class="text-muted">
                       Loading meal prep items…
                     </td>
                   </tr>
@@ -352,9 +374,13 @@
                   class="form-control"
                   id="add-recipe-ingredients"
                   rows="5"
-                  placeholder="Eggs&#10;Spinach&#10;Cheddar cheese"
+                  placeholder="2 | Eggs&#10;1 cup | Spinach&#10;Cheddar cheese"
                   required
                 ></textarea>
+                <div class="form-text">
+                  Optionally add an amount before a “|”, e.g.
+                  <code>1 cup | Spinach</code>.
+                </div>
               </div>
 
               <div class="mb-3">
@@ -411,10 +437,18 @@
 
     <script type="module" src="js/recipes.js"></script>
     <footer class="sl-footer">
-      <div class="container d-flex flex-column flex-sm-row align-items-center justify-content-between gap-2">
+      <div
+        class="container d-flex flex-column flex-sm-row align-items-center justify-content-between gap-2"
+      >
         <span class="sl-footer-brand">ShelfLife</span>
         <span>Created by Ally Descoteaux and James Hicks</span>
-        <a href="https://www.flaticon.com/free-icons/groceries" title="groceries icons" target="_blank" rel="noopener noreferrer">Groceries icons by monkik — Flaticon</a>
+        <a
+          href="https://www.flaticon.com/free-icons/groceries"
+          title="groceries icons"
+          target="_blank"
+          rel="noopener noreferrer"
+          >Groceries icons by monkik — Flaticon</a
+        >
       </div>
     </footer>
   </body>

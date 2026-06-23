@@ -17,6 +17,7 @@ See [user-stories.md](user-stories.md) for the grouped user stories and use case
 ## Design Mockups
 
 ### Original Mockup
+
 ![Original Mockup](/public/assets/OriginalMockup.png)
 
 ### Later Version of Index.html and Recipes.html

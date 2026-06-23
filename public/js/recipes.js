@@ -14,10 +14,22 @@ const mealPrepForm = document.getElementById("meal-prep-form");
 const mealPrepRecipeSelect = document.getElementById("meal-prep-recipe");
 const addRecipeForm = document.getElementById("add-recipe-form");
 const addRecipeModalEl = document.getElementById("add-recipe-modal");
+const addRecipeTrigger = document.getElementById("add-recipe-trigger");
+const mealPrepQuantityInput = document.getElementById("meal-prep-quantity");
+const mealPrepUnitSelect = document.getElementById("meal-prep-unit");
+
+// Units that make sense for batch-cooked food.
+const MEAL_UNITS = ["servings", "portions", "containers", "meals"];
 
 let selectedRecipeId = null;
 let searchDebounce = null;
 let currentPage = 1;
+let mealPrepItems = [];
+let editingMealPrepId = null;
+// The recipe currently shown in the detail panel, kept so the edit form can be
+// pre-filled. `editingRecipeId` is the slug being edited, or null when adding.
+let currentDetailRecipe = null;
+let editingRecipeId = null;
 
 function escapeHtml(text) {
   if (text === null || text === undefined) {
@@ -293,9 +305,10 @@ function reloadFromFirstPage() {
 function renderIngredientList(recipe) {
   const need = new Set(recipe.missingIngredients);
   const have = new Set(recipe.matchedIngredients);
+  const measures = recipe.measures ?? [];
 
   return recipe.ingredients
-    .map((ingredient) => {
+    .map((ingredient, index) => {
       let stateClass = "ingredient-staple";
       let note = "pantry staple";
 
@@ -309,9 +322,14 @@ function renderIngredientList(recipe) {
         note = "need to buy";
       }
 
+      const measure = (measures[index] || "").trim();
+      const amount = measure
+        ? `<span class="ingredient-amount">${escapeHtml(measure)}</span> `
+        : "";
+
       return `
         <li class="ingredient-row ${stateClass}">
-          <span>${escapeHtml(ingredient)}</span>
+          <span>${amount}${escapeHtml(ingredient)}</span>
           <span class="ingredient-note">${note}</span>
         </li>
       `;
@@ -327,6 +345,8 @@ async function loadRecipeDetail(recipeId) {
     if (!response.ok) {
       throw new Error(recipe.error || "Failed to load recipe detail");
     }
+
+    currentDetailRecipe = recipe;
 
     const atRiskNote =
       recipe.valueAtRisk > 0
@@ -376,7 +396,12 @@ async function loadRecipeDetail(recipeId) {
       <div class="recipe-detail">
         <div class="recipe-detail-head">
           ${imageBlock}
-          <h3 class="mb-1">${escapeHtml(recipe.name)}</h3>
+          <div class="recipe-detail-title-row">
+            <h3 class="mb-1">${escapeHtml(recipe.name)}</h3>
+            <button type="button" class="btn btn-warning btn-sm recipe-edit-btn">
+              Edit
+            </button>
+          </div>
           ${metaBlock}
           ${renderTagChips(recipe.tags)}
           ${renderMatchMeter(recipe)}
@@ -478,34 +503,129 @@ function renderUseByCell(expirationDate) {
   `;
 }
 
+function formatMealQuantity(item) {
+  if (item.quantity === null || item.quantity === undefined) {
+    return '<span class="text-muted">—</span>';
+  }
+  return `${escapeHtml(item.quantity)} ${escapeHtml(item.quantityUnit || "")}`.trim();
+}
+
+function renderUnitOptions(selected) {
+  return MEAL_UNITS.map(
+    (unit) =>
+      `<option value="${unit}"${unit === selected ? " selected" : ""}>${unit}</option>`
+  ).join("");
+}
+
+// A meal-prep row in its normal (read) state.
+function renderMealPrepRow(item) {
+  return `
+    <tr data-id="${item._id}">
+      <td>${escapeHtml(item.name)}</td>
+      <td>${formatMealQuantity(item)}</td>
+      <td class="text-muted">${escapeHtml(item.preparedDate || "")}</td>
+      ${renderUseByCell(item.expirationDate)}
+      <td class="text-end">
+        <button
+          type="button"
+          class="btn btn-warning btn-sm meal-prep-edit-btn"
+          data-id="${item._id}"
+        >
+          Edit
+        </button>
+        <button
+          type="button"
+          class="btn btn-danger btn-sm meal-prep-delete-btn"
+          data-id="${item._id}"
+        >
+          Delete
+        </button>
+      </td>
+    </tr>
+  `;
+}
+
+// A meal-prep row swapped into inline-edit inputs.
+function renderMealPrepEditRow(item) {
+  return `
+    <tr data-id="${item._id}" class="meal-prep-editing">
+      <td>
+        <input
+          type="text"
+          class="form-control form-control-sm meal-prep-edit-name"
+          value="${escapeHtml(item.name)}"
+        />
+      </td>
+      <td>
+        <div class="input-group input-group-sm meal-prep-edit-qty-group">
+          <input
+            type="number"
+            class="form-control meal-prep-edit-quantity"
+            value="${item.quantity ?? ""}"
+            min="0"
+            step="any"
+          />
+          <select class="form-select meal-prep-edit-unit" aria-label="Quantity unit">
+            ${renderUnitOptions(item.quantityUnit || MEAL_UNITS[0])}
+          </select>
+        </div>
+      </td>
+      <td>
+        <input
+          type="date"
+          class="form-control form-control-sm meal-prep-edit-prepared"
+          value="${item.preparedDate || ""}"
+        />
+      </td>
+      <td>
+        <input
+          type="date"
+          class="form-control form-control-sm meal-prep-edit-expiration"
+          value="${item.expirationDate || ""}"
+        />
+      </td>
+      <td class="text-end">
+        <button
+          type="button"
+          class="btn btn-success btn-sm meal-prep-save-btn"
+          data-id="${item._id}"
+        >
+          Save
+        </button>
+        <button
+          type="button"
+          class="btn btn-secondary btn-sm meal-prep-cancel-btn"
+        >
+          Cancel
+        </button>
+      </td>
+    </tr>
+  `;
+}
+
+function renderMealPrepTable() {
+  const tableBody = document.getElementById("meal-prep-table");
+
+  if (!mealPrepItems.length) {
+    tableBody.innerHTML =
+      '<tr><td colspan="5" class="text-muted">No meal-prepped foods tracked yet.</td></tr>';
+    return;
+  }
+
+  tableBody.innerHTML = mealPrepItems
+    .map((item) =>
+      item._id === editingMealPrepId
+        ? renderMealPrepEditRow(item)
+        : renderMealPrepRow(item)
+    )
+    .join("");
+}
+
 async function loadMealPrep() {
   try {
     const response = await fetch("/api/recipes/meal-prep");
-    const items = await response.json();
-    const tableBody = document.getElementById("meal-prep-table");
-
-    tableBody.innerHTML = items.length
-      ? items
-          .map(
-            (item) => `
-              <tr>
-                <td>${escapeHtml(item.name)}</td>
-                <td class="text-muted">${escapeHtml(item.preparedDate || "")}</td>
-                ${renderUseByCell(item.expirationDate)}
-                <td class="text-end">
-                  <button
-                    type="button"
-                    class="btn btn-danger btn-sm meal-prep-delete-btn"
-                    data-id="${item._id}"
-                  >
-                    Delete
-                  </button>
-                </td>
-              </tr>
-            `
-          )
-          .join("")
-      : '<tr><td colspan="4" class="text-muted">No meal-prepped foods tracked yet.</td></tr>';
+    mealPrepItems = await response.json();
+    renderMealPrepTable();
   } catch (error) {
     console.error("Failed to load meal prep items:", error);
   }
@@ -610,6 +730,8 @@ mealPrepForm.addEventListener("submit", async (event) => {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         name,
+        quantity: mealPrepQuantityInput.value,
+        quantityUnit: mealPrepUnitSelect.value,
         preparedDate: document.getElementById("meal-prep-date").value,
         expirationDate: document.getElementById("meal-prep-expiration").value,
         recipeId,
@@ -621,15 +743,72 @@ mealPrepForm.addEventListener("submit", async (event) => {
     }
 
     mealPrepForm.reset();
+    mealPrepUnitSelect.value = MEAL_UNITS[0];
     await loadMealPrep();
   } catch (error) {
     console.error("Failed to submit meal prep form:", error);
   }
 });
 
+async function saveMealPrepEdit(id) {
+  const row = document.querySelector(`tr[data-id="${id}"]`);
+  if (!row) {
+    return;
+  }
+
+  const name = row.querySelector(".meal-prep-edit-name").value.trim();
+  const preparedDate = row.querySelector(".meal-prep-edit-prepared").value;
+  const expirationDate = row.querySelector(".meal-prep-edit-expiration").value;
+  if (!name || !preparedDate || !expirationDate) {
+    return;
+  }
+
+  try {
+    const response = await fetch(`/api/recipes/meal-prep/${id}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        name,
+        quantity: row.querySelector(".meal-prep-edit-quantity").value,
+        quantityUnit: row.querySelector(".meal-prep-edit-unit").value,
+        preparedDate,
+        expirationDate,
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error("failed to update meal prep item");
+    }
+
+    editingMealPrepId = null;
+    await loadMealPrep();
+  } catch (error) {
+    console.error("Failed to update meal prep item:", error);
+  }
+}
+
 document
   .getElementById("meal-prep-table")
   .addEventListener("click", async (event) => {
+    const editBtn = event.target.closest(".meal-prep-edit-btn");
+    if (editBtn) {
+      editingMealPrepId = editBtn.dataset.id;
+      renderMealPrepTable();
+      return;
+    }
+
+    if (event.target.closest(".meal-prep-cancel-btn")) {
+      editingMealPrepId = null;
+      renderMealPrepTable();
+      return;
+    }
+
+    const saveBtn = event.target.closest(".meal-prep-save-btn");
+    if (saveBtn) {
+      await saveMealPrepEdit(saveBtn.dataset.id);
+      return;
+    }
+
     const button = event.target.closest(".meal-prep-delete-btn");
     if (!button) {
       return;
@@ -643,6 +822,9 @@ document
       await fetch(`/api/recipes/meal-prep/${button.dataset.id}`, {
         method: "DELETE",
       });
+      if (editingMealPrepId === button.dataset.id) {
+        editingMealPrepId = null;
+      }
       await loadMealPrep();
     } catch (error) {
       console.error("Failed to delete meal prep item:", error);
@@ -664,11 +846,91 @@ function splitCommas(value) {
     .filter(Boolean);
 }
 
+// Parse the ingredients textarea. Each non-empty line is "amount | name" or
+// just "name"; returns aligned ingredients[] and measures[] arrays.
+function parseIngredientLines(value) {
+  const ingredients = [];
+  const measures = [];
+
+  value.split("\n").forEach((rawLine) => {
+    const line = rawLine.trim();
+    if (!line) {
+      return;
+    }
+    const sep = line.indexOf("|");
+    const measure = sep >= 0 ? line.slice(0, sep).trim() : "";
+    const name = sep >= 0 ? line.slice(sep + 1).trim() : line;
+    if (!name) {
+      return;
+    }
+    ingredients.push(name);
+    measures.push(measure);
+  });
+
+  return { ingredients, measures };
+}
+
+// Rebuild textarea lines from stored ingredients + measures for editing.
+function ingredientsToText(recipe) {
+  const measures = recipe.measures ?? [];
+  return (recipe.ingredients ?? [])
+    .map((name, index) => {
+      const measure = (measures[index] || "").trim();
+      return measure ? `${measure} | ${name}` : name;
+    })
+    .join("\n");
+}
+
+function setRecipeFormValue(id, value) {
+  document.getElementById(id).value = value ?? "";
+}
+
+// Switch the shared modal between "add" and "edit" modes. Pass a recipe to
+// pre-fill the form for editing, or nothing to start a blank new recipe.
+function setRecipeFormMode(recipe) {
+  const title = document.getElementById("add-recipe-title");
+  // The submit button lives in the modal footer (outside the <form>, linked by
+  // the form attribute), so query the modal rather than the form.
+  const submit = addRecipeModalEl.querySelector('button[type="submit"]');
+  document.getElementById("add-recipe-error").classList.add("d-none");
+
+  if (recipe) {
+    editingRecipeId = recipe.id;
+    title.textContent = "Edit recipe";
+    submit.textContent = "Update recipe";
+
+    setRecipeFormValue("add-recipe-name", recipe.name);
+    setRecipeFormValue("add-recipe-tags", (recipe.tags ?? []).join(", "));
+    setRecipeFormValue("add-recipe-prep", recipe.prepTimeMinutes);
+    setRecipeFormValue("add-recipe-cook", recipe.cookTimeMinutes);
+    setRecipeFormValue("add-recipe-servings", recipe.servings);
+    setRecipeFormValue("add-recipe-difficulty", recipe.difficulty ?? "");
+    setRecipeFormValue("add-recipe-ingredients", ingredientsToText(recipe));
+    setRecipeFormValue(
+      "add-recipe-instructions",
+      (recipe.instructions ?? []).join("\n")
+    );
+    setRecipeFormValue("add-recipe-notes", recipe.notes ?? "");
+    document.getElementById("add-recipe-mealprep").checked = Boolean(
+      recipe.mealPrepFriendly
+    );
+  } else {
+    editingRecipeId = null;
+    title.textContent = "Add your own recipe";
+    submit.textContent = "Save recipe";
+    addRecipeForm.reset();
+  }
+}
+
 addRecipeForm.addEventListener("submit", async (event) => {
   event.preventDefault();
 
   const errorEl = document.getElementById("add-recipe-error");
   errorEl.classList.add("d-none");
+
+  const { ingredients, measures } = parseIngredientLines(
+    document.getElementById("add-recipe-ingredients").value
+  );
 
   const payload = {
     name: document.getElementById("add-recipe-name").value.trim(),
@@ -677,9 +939,8 @@ addRecipeForm.addEventListener("submit", async (event) => {
     cookTimeMinutes: document.getElementById("add-recipe-cook").value,
     servings: document.getElementById("add-recipe-servings").value,
     difficulty: document.getElementById("add-recipe-difficulty").value,
-    ingredients: splitLines(
-      document.getElementById("add-recipe-ingredients").value
-    ),
+    ingredients,
+    measures,
     instructions: splitLines(
       document.getElementById("add-recipe-instructions").value
     ),
@@ -687,36 +948,54 @@ addRecipeForm.addEventListener("submit", async (event) => {
     mealPrepFriendly: document.getElementById("add-recipe-mealprep").checked,
   };
 
+  const editing = Boolean(editingRecipeId);
+  const url = editing ? `/api/recipes/${editingRecipeId}` : "/api/recipes";
+
   try {
-    const response = await fetch("/api/recipes", {
-      method: "POST",
+    const response = await fetch(url, {
+      method: editing ? "PUT" : "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
     });
-    const created = await response.json();
+    const saved = await response.json();
 
     if (!response.ok) {
-      throw new Error(created.error || "Failed to save recipe");
+      throw new Error(saved.error || "Failed to save recipe");
     }
 
-    addRecipeForm.reset();
     if (addRecipeModalEl && window.bootstrap) {
       window.bootstrap.Modal.getOrCreateInstance(addRecipeModalEl).hide();
     }
 
-    // Clear filters and jump to the new recipe so the user sees it right away.
-    searchInput.value = "";
-    tagSelect.value = "";
-    readyToggle.checked = false;
-    selectedRecipeId = created.id;
-    currentPage = 1;
+    // Show the saved recipe. When editing, keep the current filters/page; when
+    // adding, clear filters and jump to the top so the new recipe is visible.
+    selectedRecipeId = saved.id;
+    if (!editing) {
+      searchInput.value = "";
+      tagSelect.value = "";
+      readyToggle.checked = false;
+      currentPage = 1;
+    }
+    setRecipeFormMode(null);
     await Promise.all([loadRecipes(), loadShoppingSuggestions()]);
   } catch (error) {
-    console.error("Failed to add recipe:", error);
+    console.error("Failed to save recipe:", error);
     errorEl.textContent = error.message;
     errorEl.classList.remove("d-none");
   }
 });
+
+// "+ Add recipe" starts a blank form; the detail panel's Edit button pre-fills.
+addRecipeTrigger.addEventListener("click", () => setRecipeFormMode(null));
+
+recipeDetailEl.addEventListener("click", (event) => {
+  if (event.target.closest(".recipe-edit-btn") && currentDetailRecipe) {
+    setRecipeFormMode(currentDetailRecipe);
+    window.bootstrap.Modal.getOrCreateInstance(addRecipeModalEl).show();
+  }
+});
+
+mealPrepUnitSelect.innerHTML = renderUnitOptions(MEAL_UNITS[0]);
 
 populateFilters();
 loadRecipes();

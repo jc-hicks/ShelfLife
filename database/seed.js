@@ -1222,6 +1222,9 @@ async function seed() {
   const clearedHistory = await historyCollection.deleteMany({});
   const clearedRecipes = await recipeCollection.deleteMany({});
   const clearedIngredients = await ingredientCollection.deleteMany({});
+  // Cleared so the recipe route re-seeds the sample meal-prep items (with
+  // quantities) on next load.
+  await db.collection("mealPrep").deleteMany({});
   console.log(
     `Cleared ${clearedShelf.deletedCount} shelf, ${clearedHistory.deletedCount} history, ${clearedRecipes.deletedCount} recipe, and ${clearedIngredients.deletedCount} ingredient records.`
   );

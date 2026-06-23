@@ -58,11 +58,13 @@ Help users track pantry items, monitor expiration dates, get recipe ideas from i
 5. Open `http://localhost:3000` in your browser.
 
 To run with auto-restart on file changes:
+
 ```bash
 npm run start:nodemon
 ```
 
 To refresh the recipe/ingredient dataset from TheMealDB (not required — data is committed):
+
 ```bash
 npm run fetch:dataset
 npm run seed
@@ -105,6 +107,7 @@ The **Smart Shopping List** (bottom-left of the Recipes page) suggests ingredien
 ### Viewing Waste and Savings Insights
 
 The **Insights** tab on the Pantry page shows charts summarizing your history:
+
 - Total value saved vs. wasted.
 - Item counts broken down by outcome.
 - Waste rate and value at risk per food category.
@@ -117,8 +120,9 @@ These stats update automatically each time you remove an item from the shelf.
 - **Recipe recommendations** — hundreds of recipes ranked to prioritize ingredients that are close to expiring, weighted by cost.
 - **"Make It Now" filter** — instantly shows only recipes you can cook without buying anything.
 - **Recipe cost estimation** — each card shows an estimated cook cost derived from the measures in the recipe and the prices you paid for matched shelf items.
+- **Add & edit recipes** — create your own recipe through a form, or edit any recipe (name, ingredients, steps, timing, tags, etc.) from its detail panel.
 - **Smart shopping list** — suggests what to buy to unlock near-ready recipes, skipping pantry staples you always have on hand.
-- **Meal-prep tracker** — log batch-cooked food with use-by reminders; a summary panel on the dashboard shows freshness status at a glance.
+- **Meal-prep tracker** — log batch-cooked food with a quantity (e.g. "4 servings"), edit entries inline, and watch use-by reminders so leftovers get eaten in time.
 - **Waste/savings insights** — charts show money saved, money wasted, and per-category breakdowns based on your removal history.
 
 ## API Reference
@@ -127,38 +131,40 @@ All endpoints are prefixed by their route base.
 
 ### Shelf — `/api/shelf`
 
-| Method | Path | Description |
-|--------|------|-------------|
-| `GET` | `/api/shelf` | Return all shelf items |
-| `POST` | `/api/shelf` | Add a new shelf item |
-| `PUT` | `/api/shelf/:id` | Update a shelf item by MongoDB `_id` |
+| Method   | Path             | Description                            |
+| -------- | ---------------- | -------------------------------------- |
+| `GET`    | `/api/shelf`     | Return all shelf items                 |
+| `POST`   | `/api/shelf`     | Add a new shelf item                   |
+| `PUT`    | `/api/shelf/:id` | Update a shelf item by MongoDB `_id`   |
 | `DELETE` | `/api/shelf/:id` | Remove an item and write it to history |
 
 **Shelf item fields:** `name`, `storedDate`, `expirationDate`, `quantity`, `quantityUnit`, `cost`, `category`
 
 ### Recipes — `/api/recipes`
 
-| Method | Path | Description |
-|--------|------|-------------|
-| `GET` | `/api/recipes` | Paginated, ranked recipe list |
-| `POST` | `/api/recipes` | Create a custom recipe |
-| `GET` | `/api/recipes/tags` | All distinct recipe tags |
-| `GET` | `/api/recipes/ingredients` | Ingredient names for autocomplete |
-| `GET` | `/api/recipes/shopping-suggestions` | Suggested items to buy |
-| `GET` | `/api/recipes/meal-prep` | All logged meal-prep items |
-| `POST` | `/api/recipes/meal-prep` | Log a new meal-prep item |
-| `DELETE` | `/api/recipes/meal-prep/:id` | Remove a meal-prep item |
-| `GET` | `/api/recipes/:id` | Full recipe detail with pantry match data |
+| Method   | Path                                | Description                               |
+| -------- | ----------------------------------- | ----------------------------------------- |
+| `GET`    | `/api/recipes`                      | Paginated, ranked recipe list             |
+| `POST`   | `/api/recipes`                      | Create a custom recipe                    |
+| `GET`    | `/api/recipes/tags`                 | All distinct recipe tags                  |
+| `GET`    | `/api/recipes/ingredients`          | Ingredient names for autocomplete         |
+| `GET`    | `/api/recipes/shopping-suggestions` | Suggested items to buy                    |
+| `GET`    | `/api/recipes/meal-prep`            | All logged meal-prep items                |
+| `POST`   | `/api/recipes/meal-prep`            | Log a new meal-prep item (with quantity)  |
+| `PUT`    | `/api/recipes/meal-prep/:id`        | Edit a meal-prep item                     |
+| `DELETE` | `/api/recipes/meal-prep/:id`        | Remove a meal-prep item                   |
+| `GET`    | `/api/recipes/:id`                  | Full recipe detail with pantry match data |
+| `PUT`    | `/api/recipes/:id`                  | Edit a recipe by its slug `id`            |
 
 **Recipe list query params:** `search`, `tag`, `ready` (boolean), `page`, `pageSize` (max 50)
 
 ### History — `/api/history`
 
-| Method | Path | Description |
-|--------|------|-------------|
-| `GET` | `/api/history` | All history records, newest first |
-| `GET` | `/api/history/stats` | Aggregate saved/wasted totals and counts |
-| `GET` | `/api/history/by-category` | Per-category waste and savings breakdown |
+| Method | Path                       | Description                              |
+| ------ | -------------------------- | ---------------------------------------- |
+| `GET`  | `/api/history`             | All history records, newest first        |
+| `GET`  | `/api/history/stats`       | Aggregate saved/wasted totals and counts |
+| `GET`  | `/api/history/by-category` | Per-category waste and savings breakdown |
 
 ## Data Collections
 
@@ -166,9 +172,9 @@ The app reads and writes five MongoDB collections (1,000+ seeded records in tota
 
 - `shelf` — current pantry inventory.
 - `history` — items removed from the shelf, used for waste/savings insights. Each record has an `outcome` field: `"saved"` (removed within 7 days of expiry), `"wasted"` (removed after expiry), or `"used"` (removed well before expiry).
-- `recipes` — a hand-written catalog (`database/recipe-data.js`) plus a large imported set of real recipes.
+- `recipes` — a hand-written catalog (`database/recipe-data.js`) plus a large imported set of real recipes; supports create, read, and update from the UI.
 - `ingredients` — an ingredient reference list that powers search autocomplete.
-- `mealPrep` — tracked meal-prepped foods.
+- `mealPrep` — tracked meal-prepped foods with quantities; supports create, read, update, and delete.
 
 ## Tech Stack
 
@@ -178,13 +184,13 @@ The app reads and writes five MongoDB collections (1,000+ seeded records in tota
 
 ## Scripts
 
-| Script | Description |
-|--------|-------------|
-| `npm start` | Start the Express server |
-| `npm run start:nodemon` | Start with auto-restart on changes |
-| `npm run seed` | Seed all MongoDB collections |
+| Script                  | Description                                      |
+| ----------------------- | ------------------------------------------------ |
+| `npm start`             | Start the Express server                         |
+| `npm run start:nodemon` | Start with auto-restart on changes               |
+| `npm run seed`          | Seed all MongoDB collections                     |
 | `npm run fetch:dataset` | Refresh `database/dataset/*.json` from TheMealDB |
-| `npm run lint` | Run ESLint |
-| `npm run lint:fix` | Run ESLint with auto-fix |
-| `npm run format` | Format all files with Prettier |
-| `npm run validate` | Run format check and lint together |
+| `npm run lint`          | Run ESLint                                       |
+| `npm run lint:fix`      | Run ESLint with auto-fix                         |
+| `npm run format`        | Format all files with Prettier                   |
+| `npm run validate`      | Run format check and lint together               |

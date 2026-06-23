@@ -26,18 +26,24 @@ const STAPLE_INGREDIENTS = new Set(["salt", "pepper", "water", "oil", "sugar"]);
 const defaultMealPrepItems = [
   {
     name: "Chicken Alfredo",
+    quantity: 4,
+    quantityUnit: "servings",
     preparedDate: "2026-06-15",
     expirationDate: "2026-06-18",
     recipeId: "creamy-spinach-pasta",
   },
   {
     name: "Pasta Salad",
+    quantity: 2,
+    quantityUnit: "containers",
     preparedDate: "2026-06-14",
     expirationDate: "2026-06-17",
     recipeId: null,
   },
   {
     name: "Turkey Sandwich",
+    quantity: 1,
+    quantityUnit: "servings",
     preparedDate: "2026-06-16",
     expirationDate: "2026-06-18",
     recipeId: null,
@@ -73,6 +79,26 @@ function cleanList(value) {
     return [];
   }
   return value.map((item) => String(item).trim()).filter(Boolean);
+}
+
+// Pair ingredient names with their (optional) measure strings by index,
+// dropping any entry with a blank name so the two arrays stay aligned.
+function cleanIngredientPairs(ingredients, measures) {
+  const names = Array.isArray(ingredients) ? ingredients : [];
+  const amounts = Array.isArray(measures) ? measures : [];
+  const cleanNames = [];
+  const cleanMeasures = [];
+
+  names.forEach((name, index) => {
+    const trimmed = String(name).trim();
+    if (!trimmed) {
+      return;
+    }
+    cleanNames.push(trimmed);
+    cleanMeasures.push(String(amounts[index] ?? "").trim());
+  });
+
+  return { ingredients: cleanNames, measures: cleanMeasures };
 }
 
 // Break a food name into comparable tokens: lowercased, punctuation dropped,
@@ -570,7 +596,10 @@ router.get("/", async (req, res) => {
 router.post("/", async (req, res) => {
   try {
     const name = String(req.body.name ?? "").trim();
-    const ingredients = cleanList(req.body.ingredients);
+    const { ingredients, measures } = cleanIngredientPairs(
+      req.body.ingredients,
+      req.body.measures
+    );
     const instructions = cleanList(req.body.instructions);
 
     if (!name || !ingredients.length || !instructions.length) {
@@ -598,6 +627,7 @@ router.post("/", async (req, res) => {
       difficulty: String(req.body.difficulty ?? "").trim() || null,
       tags: cleanList(req.body.tags),
       ingredients,
+      measures,
       instructions,
       notes: String(req.body.notes ?? "").trim() || null,
       mealPrepFriendly: Boolean(req.body.mealPrepFriendly),
@@ -688,7 +718,14 @@ router.get("/meal-prep", async (req, res) => {
 
 router.post("/meal-prep", async (req, res) => {
   try {
-    const { name, preparedDate, expirationDate, recipeId = null } = req.body;
+    const {
+      name,
+      preparedDate,
+      expirationDate,
+      recipeId = null,
+      quantity = null,
+      quantityUnit = null,
+    } = req.body;
 
     if (!name || !preparedDate || !expirationDate) {
       return res.status(400).json({
@@ -700,6 +737,8 @@ router.post("/meal-prep", async (req, res) => {
 
     const newMealPrepItem = {
       name,
+      quantity: toNumberOrNull(quantity),
+      quantityUnit: quantityUnit || null,
       preparedDate,
       expirationDate,
       recipeId,
@@ -716,6 +755,59 @@ router.post("/meal-prep", async (req, res) => {
 
     res.status(500).json({
       error: "Failed to create meal-prepped food item",
+    });
+  }
+});
+
+router.put("/meal-prep/:id", async (req, res) => {
+  try {
+    if (!ObjectId.isValid(req.params.id)) {
+      return res.status(400).json({
+        error: "Invalid meal-prep item id",
+      });
+    }
+
+    const {
+      name,
+      preparedDate,
+      expirationDate,
+      recipeId = null,
+      quantity = null,
+      quantityUnit = null,
+    } = req.body;
+
+    if (!name || !preparedDate || !expirationDate) {
+      return res.status(400).json({
+        error: "Name, prepared date, and expiration date are required",
+      });
+    }
+
+    const result = await mealPrepCollection.updateOne(
+      { _id: new ObjectId(req.params.id) },
+      {
+        $set: {
+          name,
+          quantity: toNumberOrNull(quantity),
+          quantityUnit: quantityUnit || null,
+          preparedDate,
+          expirationDate,
+          recipeId,
+        },
+      }
+    );
+
+    if (result.matchedCount === 0) {
+      return res.status(404).json({
+        error: "Meal-prepped item not found",
+      });
+    }
+
+    res.json({ message: "Meal-prepped item updated" });
+  } catch (error) {
+    console.error(error);
+
+    res.status(500).json({
+      error: "Failed to update meal-prepped item",
     });
   }
 });
@@ -767,6 +859,61 @@ router.get("/:id", async (req, res) => {
 
     res.status(500).json({
       error: "Failed to fetch recipe details",
+    });
+  }
+});
+
+// Edit an existing recipe (any recipe, by its slug id). The id, image, and
+// source are preserved; everything the form exposes can be changed.
+router.put("/:id", async (req, res) => {
+  try {
+    const name = String(req.body.name ?? "").trim();
+    const { ingredients, measures } = cleanIngredientPairs(
+      req.body.ingredients,
+      req.body.measures
+    );
+    const instructions = cleanList(req.body.instructions);
+
+    if (!name || !ingredients.length || !instructions.length) {
+      return res.status(400).json({
+        error:
+          "A name, at least one ingredient, and at least one step are required",
+      });
+    }
+
+    const result = await recipeCollection.updateOne(
+      { id: req.params.id },
+      {
+        $set: {
+          name,
+          prepTimeMinutes: toNumberOrNull(req.body.prepTimeMinutes),
+          cookTimeMinutes: toNumberOrNull(req.body.cookTimeMinutes),
+          servings: toNumberOrNull(req.body.servings),
+          difficulty: String(req.body.difficulty ?? "").trim() || null,
+          tags: cleanList(req.body.tags),
+          ingredients,
+          measures,
+          instructions,
+          notes: String(req.body.notes ?? "").trim() || null,
+          mealPrepFriendly: Boolean(req.body.mealPrepFriendly),
+        },
+      }
+    );
+
+    if (result.matchedCount === 0) {
+      return res.status(404).json({
+        error: "Recipe not found",
+      });
+    }
+
+    const recipe = await recipeCollection.findOne({ id: req.params.id });
+    const shelfItems = await shelfCollection.find({}).toArray();
+    res.json(formatRecipe(recipe, shelfItems));
+  } catch (error) {
+    console.error(error);
+
+    res.status(500).json({
+      error: "Failed to update recipe",
     });
   }
 });
