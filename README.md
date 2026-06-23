@@ -120,8 +120,9 @@ These stats update automatically each time you remove an item from the shelf.
 - **Recipe recommendations** — hundreds of recipes ranked to prioritize ingredients that are close to expiring, weighted by cost.
 - **"Make It Now" filter** — instantly shows only recipes you can cook without buying anything.
 - **Recipe cost estimation** — each card shows an estimated cook cost derived from the measures in the recipe and the prices you paid for matched shelf items.
-- **Add & edit recipes** — create your own recipe through a form, or edit any recipe (name, ingredients, steps, timing, tags, etc.) from its detail panel.
-- **Smart shopping list** — suggests what to buy to unlock near-ready recipes, skipping pantry staples you always have on hand.
+- **Add & edit recipes** — create your own recipe through a form, or edit any recipe (name, ingredients with amounts, steps, timing, tags, etc.) from its detail panel.
+- **Cook this** — mark a recipe cooked and the matching ingredients are deducted from your pantry by the amount the recipe uses; depleted items are removed and every portion is logged to history so it flows into your savings/waste insights.
+- **Smart shopping list** — suggests what to buy to unlock near-ready recipes (skipping pantry staples), and lets you add any suggestion straight to your pantry with one click.
 - **Meal-prep tracker** — log batch-cooked food with a quantity (e.g. "4 servings"), edit entries inline, and watch use-by reminders so leftovers get eaten in time.
 - **Waste/savings insights** — charts show money saved, money wasted, and per-category breakdowns based on your removal history.
 
@@ -155,6 +156,7 @@ All endpoints are prefixed by their route base.
 | `DELETE` | `/api/recipes/meal-prep/:id`        | Remove a meal-prep item                   |
 | `GET`    | `/api/recipes/:id`                  | Full recipe detail with pantry match data |
 | `PUT`    | `/api/recipes/:id`                  | Edit a recipe by its slug `id`            |
+| `POST`   | `/api/recipes/:id/cook`             | Deduct matched ingredients from the shelf |
 
 **Recipe list query params:** `search`, `tag`, `ready` (boolean), `page`, `pageSize` (max 50)
 

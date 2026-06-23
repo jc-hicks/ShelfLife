@@ -9,6 +9,7 @@ const shelfCollection = db.collection("shelf");
 const recipeCollection = db.collection("recipes");
 const ingredientCollection = db.collection("ingredients");
 const mealPrepCollection = db.collection("mealPrep");
+const historyCollection = db.collection("history");
 
 // The catalog is large (hundreds of imported recipes), so the list endpoint is
 // paginated. Page size is capped so a single request can't pull everything.
@@ -336,6 +337,52 @@ function estimateIngredientCost(recipeIndex, recipe, shelfItem) {
 
   const fraction = recipeBase.value / shelfBase.value;
   return Math.round(Number(shelfItem.cost) * fraction * 100) / 100;
+}
+
+function round2(value) {
+  return Math.round(value * 100) / 100;
+}
+
+// What fraction (0–1) of a shelf item one recipe use consumes. Uses the stored
+// measure when units are compatible; otherwise assumes a single unit is used.
+function consumedFraction(recipe, index, shelfItem) {
+  const recipeBase = toBase(parseMeasure((recipe.measures || [])[index]));
+  const shelfBase = toBase({
+    quantity: Number(shelfItem.quantity),
+    unit: shelfItem.quantityUnit || "",
+  });
+
+  if (
+    recipeBase &&
+    shelfBase &&
+    recipeBase.type === shelfBase.type &&
+    shelfBase.value > 0
+  ) {
+    return Math.min(1, recipeBase.value / shelfBase.value);
+  }
+
+  const quantity = Number(shelfItem.quantity);
+  if (Number.isFinite(quantity) && quantity > 0) {
+    return Math.min(1, 1 / quantity);
+  }
+  return 1;
+}
+
+// A history record for an ingredient consumed by cooking — always "used", which
+// is neutral in the savings/waste stats.
+function buildCookedHistory(shelfItem, value, consumedQuantity) {
+  return {
+    name: shelfItem.name,
+    storedDate: shelfItem.storedDate ?? null,
+    expirationDate: shelfItem.expirationDate ?? null,
+    quantity: consumedQuantity ?? shelfItem.quantity ?? null,
+    quantityUnit: shelfItem.quantityUnit ?? null,
+    cost: value,
+    category: shelfItem.category ?? null,
+    value: Number.isFinite(value) ? value : 0,
+    outcome: "used",
+    removedDate: new Date(),
+  };
 }
 
 // Pair each non-staple ingredient with the shelf item that satisfies it (if
@@ -838,6 +885,83 @@ router.delete("/meal-prep/:id", async (req, res) => {
 
     res.status(500).json({
       error: "Failed to delete meal-prepped item",
+    });
+  }
+});
+
+// Cook a recipe: consume its matched ingredients from the shelf. Each shelf
+// item is reduced by the amount the recipe uses (from its measure); items that
+// run out are removed. Every consumed portion is logged to history as "used"
+// so it flows into the savings/waste insights.
+router.post("/:id/cook", async (req, res) => {
+  try {
+    const recipe = await recipeCollection.findOne({ id: req.params.id });
+
+    if (!recipe) {
+      return res.status(404).json({
+        error: "Recipe not found",
+      });
+    }
+
+    const shelfItems = await shelfCollection.find({}).toArray();
+    const usedUp = [];
+    const reduced = [];
+
+    for (let index = 0; index < recipe.ingredients.length; index += 1) {
+      const ingredient = recipe.ingredients[index];
+      if (isStaple(ingredient)) {
+        continue;
+      }
+
+      const shelfItem = shelfItems.find((item) =>
+        namesMatch(ingredient, item.name)
+      );
+      if (!shelfItem) {
+        continue;
+      }
+
+      const totalCost = Number(shelfItem.cost) || 0;
+      const quantity = Number(shelfItem.quantity);
+      const fraction = consumedFraction(recipe, index, shelfItem);
+      const remainingQuantity =
+        Number.isFinite(quantity) && quantity > 0
+          ? round2(quantity * (1 - fraction))
+          : 0;
+
+      if (remainingQuantity <= 0) {
+        // Used up — remove it and log the full remaining value.
+        await shelfCollection.deleteOne({ _id: shelfItem._id });
+        await historyCollection.insertOne(
+          buildCookedHistory(shelfItem, round2(totalCost), shelfItem.quantity)
+        );
+        usedUp.push(shelfItem.name);
+      } else {
+        const consumedCost = round2(totalCost * fraction);
+        const consumedQuantity = Number.isFinite(quantity)
+          ? round2(quantity * fraction)
+          : null;
+        await shelfCollection.updateOne(
+          { _id: shelfItem._id },
+          {
+            $set: {
+              quantity: remainingQuantity,
+              cost: round2(totalCost - consumedCost),
+            },
+          }
+        );
+        await historyCollection.insertOne(
+          buildCookedHistory(shelfItem, consumedCost, consumedQuantity)
+        );
+        reduced.push(shelfItem.name);
+      }
+    }
+
+    res.json({ usedUp, reduced });
+  } catch (error) {
+    console.error(error);
+
+    res.status(500).json({
+      error: "Failed to cook recipe",
     });
   }
 });

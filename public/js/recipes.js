@@ -398,9 +398,21 @@ async function loadRecipeDetail(recipeId) {
           ${imageBlock}
           <div class="recipe-detail-title-row">
             <h3 class="mb-1">${escapeHtml(recipe.name)}</h3>
-            <button type="button" class="btn btn-warning btn-sm recipe-edit-btn">
-              Edit
-            </button>
+            <div class="recipe-detail-actions">
+              ${
+                recipe.matchedIngredients.length
+                  ? `<button type="button" class="btn btn-success btn-sm recipe-cook-btn">
+                       Cook this
+                     </button>`
+                  : ""
+              }
+              <button
+                type="button"
+                class="btn btn-warning btn-sm recipe-edit-btn"
+              >
+                Edit
+              </button>
+            </div>
           </div>
           ${metaBlock}
           ${renderTagChips(recipe.tags)}
@@ -456,15 +468,73 @@ async function loadShoppingSuggestions() {
               <tr>
                 <td>${escapeHtml(suggestion.item)}</td>
                 <td class="text-muted">${escapeHtml(suggestion.reason)}</td>
+                <td class="text-end">
+                  <button
+                    type="button"
+                    class="btn btn-success btn-sm shopping-add-btn"
+                    data-item="${escapeHtml(suggestion.item)}"
+                  >
+                    Add to pantry
+                  </button>
+                </td>
               </tr>
             `
           )
           .join("")
-      : '<tr><td colspan="2" class="text-muted">Your shelf already covers the top recipes. Nice.</td></tr>';
+      : '<tr><td colspan="3" class="text-muted">Your shelf already covers the top recipes. Nice.</td></tr>';
   } catch (error) {
     console.error("Failed to load shopping suggestions:", error);
   }
 }
+
+function todayString() {
+  const date = new Date();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${date.getFullYear()}-${month}-${day}`;
+}
+
+async function addSuggestionToPantry(itemName, button) {
+  button.disabled = true;
+  button.textContent = "Adding…";
+
+  try {
+    const response = await fetch("/api/shelf", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        name: itemName,
+        category: "Other",
+        quantity: 1,
+        quantityUnit: "item",
+        cost: null,
+        storedDate: todayString(),
+        expirationDate: null,
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error("failed to add to pantry");
+    }
+
+    // The new shelf item changes what's matched/missing, so refresh the views
+    // that depend on the pantry. The item drops off the list once it's covered.
+    await Promise.all([loadShoppingSuggestions(), loadRecipes()]);
+  } catch (error) {
+    console.error("Failed to add suggestion to pantry:", error);
+    button.disabled = false;
+    button.textContent = "Add to pantry";
+  }
+}
+
+document
+  .getElementById("shopping-suggestions-table")
+  .addEventListener("click", (event) => {
+    const button = event.target.closest(".shopping-add-btn");
+    if (button) {
+      addSuggestionToPantry(button.dataset.item, button);
+    }
+  });
 
 function daysUntil(dateString) {
   if (!dateString) {
@@ -985,6 +1055,52 @@ addRecipeForm.addEventListener("submit", async (event) => {
   }
 });
 
+// Briefly show a success note at the top of the detail panel.
+function flashDetail(message) {
+  const note = document.createElement("div");
+  note.className = "alert alert-success py-2 px-3 mb-3";
+  note.setAttribute("role", "status");
+  note.textContent = message;
+  recipeDetailEl.prepend(note);
+  setTimeout(() => note.remove(), 5000);
+}
+
+async function cookRecipe(id) {
+  if (
+    !confirm("Cook this recipe and use the matching items from your pantry?")
+  ) {
+    return;
+  }
+
+  try {
+    const response = await fetch(`/api/recipes/${id}/cook`, { method: "POST" });
+    const result = await response.json();
+    if (!response.ok) {
+      throw new Error(result.error || "Failed to cook recipe");
+    }
+
+    // The shelf changed, so refresh everything that depends on it. loadRecipes
+    // re-renders the detail panel for the still-selected recipe.
+    selectedRecipeId = id;
+    await Promise.all([loadRecipes(), loadShoppingSuggestions()]);
+
+    const parts = [];
+    if (result.reduced?.length) {
+      parts.push(`used some ${result.reduced.join(", ")}`);
+    }
+    if (result.usedUp?.length) {
+      parts.push(`finished off ${result.usedUp.join(", ")}`);
+    }
+    flashDetail(
+      parts.length
+        ? `Cooked — ${parts.join(", and ")}. Check your pantry.`
+        : "Nothing matching was on your shelf to use."
+    );
+  } catch (error) {
+    console.error("Failed to cook recipe:", error);
+  }
+}
+
 // "+ Add recipe" starts a blank form; the detail panel's Edit button pre-fills.
 addRecipeTrigger.addEventListener("click", () => setRecipeFormMode(null));
 
@@ -992,6 +1108,11 @@ recipeDetailEl.addEventListener("click", (event) => {
   if (event.target.closest(".recipe-edit-btn") && currentDetailRecipe) {
     setRecipeFormMode(currentDetailRecipe);
     window.bootstrap.Modal.getOrCreateInstance(addRecipeModalEl).show();
+    return;
+  }
+
+  if (event.target.closest(".recipe-cook-btn") && currentDetailRecipe) {
+    cookRecipe(currentDetailRecipe.id);
   }
 });
 
