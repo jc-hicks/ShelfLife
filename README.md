@@ -49,7 +49,21 @@ Help users track pantry items, monitor expiration dates, get recipe ideas from i
    ```bash
    npm install
    ```
-2. Create a `.env` file in the project root (it is git-ignored):
+2. Create a `.env` file in the project root (it is git-ignored). Copy
+   `.env.example` and set your MongoDB connection string:
+
+   ```bash
+   cp .env.example .env
+   ```
+
+   ```bash
+   # .env
+   MONGODB_URI=mongodb://localhost:27017
+   PORT=3000
+   ```
+
+   `MONGODB_URI` can point to a local MongoDB instance or an Atlas cluster.
+   `PORT` is optional and defaults to `3000`.
 
 3. Seed the database with sample pantry items, recipes, and ingredients:
    ```bash
