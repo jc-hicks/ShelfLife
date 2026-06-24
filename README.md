@@ -16,7 +16,12 @@ Help users track pantry items, monitor expiration dates, get recipe ideas from i
 
 ## Deployment
 
-<https://shelflife-21gd.onrender.com/index.html>
+Site: <https://shelflife-21gd.onrender.com/index.html>
+
+Demo Video: <https://youtu.be/EAq-ujY2ZPI>
+
+Slides: <https://docs.google.com/presentation/d/1UUDDq3qfefckUabc5u5lnCJ45kIb39hwX22oZjoBtcw/edit?usp=sharing>
+
 
 ## Screenshots
 
